@@ -30,6 +30,7 @@ function App() {
       </p>
       <a href='/bienvenida'>Ir a la bienvenida de usuario</a>
       <a href='/instructions'>Ir a instructions</a>
+      <a href='/board'>Ir a Juego</a>
     </>
   )
 }
