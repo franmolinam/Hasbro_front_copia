@@ -1,0 +1,46 @@
+body {
+    background-color: bisque;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    padding: 5%;
+}
+
+h1 {
+    color: darkorange;
+}
+
+.title {
+    text-align: center;
+    margin-right: 4%;
+}
+
+.main-div {
+    display: flex;
+}
+
+img{
+    width: 30%;
+}
+
+.description {
+    text-align: justify;
+    margin-right: 4%;
+}
+
+.board-div{
+    display: grid;
+    grid-template-columns: repeat(6, 16.6%);
+    justify-content: center;
+}
+
+.board-div :nth-child(n) {
+    background-color: mediumseagreen;
+    font-weight: bold;
+    border: 2px solid green;
+    text-align: center;
+    padding: 20%;
+    margin: 0;
+}
+
+.board-div :hover:nth-child(n){
+    background-color: lightgreen;
+}
