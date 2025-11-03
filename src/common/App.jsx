@@ -1,38 +1,17 @@
-import { useState } from 'react'
-import reactLogo from './../assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import { useNavigate } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const navigate = useNavigate();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      <a href='/bienvenida'>Ir a la bienvenida de usuario</a>
-      <a href='/instructions'>Ir a instructions</a>
-      <a href='/board'>Ir a Juego</a>
-    </>
-  )
-}
+    <div className="app-container">
+      <h1>Chef Around the World 👩‍🍳🌍</h1>
+      <p>Elige una opción para comenzar:</p>
 
-export default App
+      <button onClick={() => navigate("/login")}>Iniciar sesión</button>
+      <button onClick={() => navigate("/signup")}>Registrarse</button>
+      <button onClick={() => navigate("/instructions")}>Ver instrucciones</button>
+    </div>
+  );
+}

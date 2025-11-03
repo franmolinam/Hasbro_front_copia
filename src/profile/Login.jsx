@@ -9,7 +9,9 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    console.log("➡️ Iniciando login con:", email, password);
     const data = await login(email, password);
+    console.log("🔍 Respuesta del servidor:", data);
     if (data.token_acceso) {
       localStorage.setItem("token", data.token_acceso);
       alert("Inicio de sesión exitoso");
