@@ -14,6 +14,7 @@ export default function Login() {
     console.log("🔍 Respuesta del servidor:", data);
     if (data.token_acceso) {
       localStorage.setItem("token", data.token_acceso);
+      localStorage.setItem("nombre", data.usuario?.nombre || "Jugador");
       alert("Inicio de sesión exitoso");
       navigate("/bienvenida");
     } else {

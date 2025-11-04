@@ -10,7 +10,9 @@ export default function UsuarioBienvenida() {
       <p>Bienvenido a Chef Around the World 🌍</p>
 
       <button onClick={() => navigate("/instructions")}>Ver instrucciones</button>
-      <button onClick={() => navigate("/board")}>Ir al tablero</button>
+      <button onClick={() => navigate("/lobby")}>
+        Ir al lobby de partidas
+      </button>
       <button
         onClick={() => {
           localStorage.clear();

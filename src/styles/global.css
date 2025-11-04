@@ -28,3 +28,24 @@ input {
   border-radius: 6px;
   border: 1px solid #ccc;
 }
+
+.avatar-selector {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.avatar-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 1rem 0;
+}
+
+.avatar-option.selected {
+  border: 3px solid #333;
+  transform: scale(1.1);
+}
+
