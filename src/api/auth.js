@@ -1,4 +1,4 @@
-const API_URL = "https://hasbro-back-252s2.onrender.com";
+const API_URL = "http://localhost:3000";
 
 export async function login(email, password) {
   const res = await fetch(`${API_URL}/auth/login`, {

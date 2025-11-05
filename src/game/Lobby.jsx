@@ -3,18 +3,16 @@ import { useNavigate } from "react-router-dom";
 import SelectorAvatar from "../profile/SelectorAvatar.jsx";
 
 export default function Lobby() {
+  const [partidaId, setPartidaId] = useState(null);
   const [codigo, setCodigo] = useState("");
   const [mostrarSelector, setMostrarSelector] = useState(false);
   const [accionPendiente, setAccionPendiente] = useState(null);
-  const [miJugadorActivo, setMiJugadorActivo] = useState(null);
+  const [misPartidasActivas, setMisPartidasActivas] = useState([]);
   const [avatarSeleccionado, setAvatarSeleccionado] = useState(null);
-  const [fallbackPartidaId, setFallbackPartidaId] = useState(
-    localStorage.getItem("lastPartidaId") || null
-  );
 
   const navigate = useNavigate();
 
-  const API_URL = "https://hasbro-back-252s2.onrender.com";
+  const API_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
 
   // 🔍 Id de usuario desde token de forma segura
@@ -29,84 +27,72 @@ export default function Lobby() {
   }
   const usuarioId = getUserIdFromToken();
 
-  // 🟢 Cargar mi partida activa si existe (pendiente o en_juego).
-  // Si el backend aún no soporta includePartida, usamos fallback de localStorage.
+  // 🟢 Cargar todas mis partidas activas (pendientes o en_juego)
   useEffect(() => {
-    let isMounted = true; // Para evitar actualizaciones si el componente se desmonta
-    async function fetchMiPartidaActiva() {
+    let isMounted = true;
+    async function fetchMisPartidasActivas() {
       if (!usuarioId || !token || !isMounted) return;
       try {
-        // Primero intentamos obtener jugadores activos
+        // Obtener todos los jugadores activos del usuario
         const res = await fetch(
           `${API_URL}/jugadores?usuarioId=${usuarioId}&inactivo=false&includePartida=true`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        console.log('Buscando partida activa...'); // Debug
+        console.log('Buscando partidas activas...'); // Debug
         if (!res.ok) {
-          console.error('Error al buscar partida activa:', await res.text());
+          console.error('Error al buscar partidas:', await res.text());
           return;
         }
         const data = await res.json();
-        console.log('Jugadores encontrados:', JSON.stringify(data, null, 2)); // Debug detallado
+        console.log('Jugadores encontrados:', JSON.stringify(data, null, 2));
 
-        // Si encontramos jugadores activos, buscar su partida
+        // Array para almacenar las partidas activas con su información
+        const partidasActivas = [];
+
+        // Obtener detalles de cada partida
         for (const jugador of data) {
           console.log('Verificando jugador:', jugador.id, 'partidaId:', jugador.partidaId);
           
           if (jugador.partidaId) {
-            // Hacer una llamada adicional para obtener los detalles de la partida
             const partidaRes = await fetch(`${API_URL}/partidas/${jugador.partidaId}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             
-            const partidaData = await partidaRes.json();
-            console.log('Respuesta de partida:', {
-              ok: partidaRes.ok,
-              status: partidaRes.status,
-              data: partidaData
-            });
-            
             if (partidaRes.ok) {
-              const partida = partidaData;
+              const partida = await partidaRes.json();
+              console.log('Partida encontrada:', partida);
               
               if (["pendiente", "en_juego"].includes(partida.estado)) {
-                // Combinar la información del jugador con la partida
-                const jugadorConPartida = {
-                  ...jugador,
-                  Partida: partida // Usamos Partida en lugar de Partidum para consistencia
-                };
-                
-                setMiJugadorActivo(jugadorConPartida);
-                if (partida.id) {
-                  localStorage.setItem("lastPartidaId", partida.id);
-                  setFallbackPartidaId(partida.id);
-                }
-                break; // Salir del loop una vez que encontremos una partida activa
+                partidasActivas.push({
+                  jugador,
+                  partida
+                });
               }
             }
           }
         }
-      } catch {
-        // Silencioso: mantenemos fallback si existía
+
+        // Actualizar el estado con todas las partidas activas encontradas
+        if (isMounted) {
+          setMisPartidasActivas(partidasActivas);
+        }
+      } catch (error) {
+        console.error('Error al cargar partidas:', error);
       }
     }
-    fetchMiPartidaActiva();
+    fetchMisPartidasActivas();
     
-    // Cleanup function
     return () => {
       isMounted = false;
     };
-  }, [usuarioId, token]); // El efecto solo se ejecutará cuando estos valores cambien
+  }, [usuarioId, token]);
 
   // Helper para guardar y navegar
-  function goToBoardAndRemember(partidaId) {
-    if (partidaId) {
-      localStorage.setItem("lastPartidaId", partidaId);
-      setFallbackPartidaId(partidaId);
-      navigate(`/board/${partidaId}`);
-    }
-  }
+    const goToBoard = (id) => {
+    setPartidaId(id);
+    navigate(`/board/${id}`);
+  };
 
   // ===== Acciones =====
   async function crearPartida(colorAvatar) {
@@ -134,7 +120,7 @@ export default function Lobby() {
     }
     if (res.ok && data?.partida?.id) {
       alert(`✅ Partida creada: código ${data.partida.codigo_acceso}`);
-      goToBoardAndRemember(data.partida.id); // 👈 id (no Id)
+      goToBoard(data.partida.id);
     } else {
       alert(`❌ Error: ${data.error || "No se pudo crear la partida"}`);
     }
@@ -167,7 +153,7 @@ export default function Lobby() {
 
     if (res.ok && data?.partidaId) {
       alert(`🎮 Te uniste a la partida ${codigo}`);
-      goToBoardAndRemember(data.partidaId);
+      goToBoard(data.partidaId);
     } else {
       alert(`❌ Error: ${data.error || "No se pudo unir a la partida"}`);
     }
@@ -199,7 +185,7 @@ export default function Lobby() {
 
     if (res.ok && data?.partidaId) {
       alert(`🎲 Te uniste a una partida aleatoria`);
-      goToBoardAndRemember(data.partidaId);
+      goToBoard(data.partidaId);
     } else {
       alert(`❌ Error: ${data.error || "No hay partidas disponibles"}`);
     }
@@ -223,118 +209,54 @@ export default function Lobby() {
     setAccionPendiente(null);
   }
 
-  // Estado de “ya estoy en una partida”
-  const hayPartidaActiva =
-    !!miJugadorActivo ||
-    (!!fallbackPartidaId && fallbackPartidaId !== "null" && fallbackPartidaId !== "undefined");
-
   // Si el usuario intenta iniciar otra acción mientras está en una partida,
   // preguntamos si quiere salir y luego procedemos.
   async function startAction(tipo) {
-    console.log('startAction invoked, tipo=', tipo, 'hayPartidaActiva=', hayPartidaActiva);
+    console.log('startAction invoked, tipo=', tipo);
 
     // Mostrar selector inmediatamente para que el usuario pueda elegir avatar.
     setAccionPendiente(tipo);
     setMostrarSelector(true);
-
-    // Si ya está en una partida, preguntar si desea salir. Si cancela, revertir.
-    if (hayPartidaActiva) {
-      const confirma = window.confirm(
-        "Ya estás en una partida. ¿Quieres salir de ella y continuar?"
-      );
-      if (!confirma) {
-        // usuario canceló, ocultar selector y reset
-        setMostrarSelector(false);
-        setAccionPendiente(null);
-        return;
-      }
-
-      const ok = await salirDeMiPartida();
-      if (!ok) {
-        // si falló al salir, revertir UI
-        setMostrarSelector(false);
-        setAccionPendiente(null);
-        return;
-      }
-      // si salió correctamente, el selector ya está visible y la acción pendiente sigue
-    }
   }
 
-  // Salir de mi partida (marca inactivo en backend)
-  async function salirDeMiPartida() {
-    try {
-      if (miJugadorActivo) {
-        const res = await fetch(`${API_URL}/jugadores/${miJugadorActivo.id}`, {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ inactivo: true }),
-        });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          // Si la partida no está activa en el backend, todavía permitimos limpiar el estado local.
-          if (data?.error && data.error.includes("La partida no está activa")) {
-            console.warn('Backend indica que la partida no está activa; limpiando estado local.');
-            // continua para limpiar el estado local
-          } else {
-            alert(`❌ Error: ${data.error || "No se pudo salir de la partida"}`);
-            return false;
-          }
-        }
-      }
-      // limpia fallback
-      localStorage.removeItem("lastPartidaId");
-      setFallbackPartidaId(null);
-      setMiJugadorActivo(null);
-      alert("Saliste de tu partida actual.");
-      return true;
-    } catch (e) {
-      console.error(e);
-      alert("Error inesperado al salir de la partida.");
-      return false;
-    }
-  }
-
-  // Datos para el bloque “Mi partida”
-  const partidaActiva =
-    (miJugadorActivo && (miJugadorActivo.Partidum || miJugadorActivo.Partida)) || null;
-  const partidaActivaId = partidaActiva?.id || fallbackPartidaId;
-  const partidaActivaEstado = partidaActiva?.estado || (fallbackPartidaId ? "en_juego" : null);
-  const partidaActivaCodigo = partidaActiva?.codigo_acceso || null;
 
   return (
     <div className="lobby-container">
       <h2>🎯 Lobby de Partidas</h2>
 
-      {/* Mi partida actual (usa API si hay, si no usa localStorage) */}
-      {hayPartidaActiva && (
-        <div
-          className="mi-partida-actual"
-          style={{ border: "1px solid #ccc", padding: 12, borderRadius: 8, marginBottom: 16 }}
-        >
-          <h4>🟢 Estás en una partida</h4>
-          <p>
-            {partidaActivaCodigo && (
-              <>
-                Código: <b>{partidaActivaCodigo}</b> ·{" "}
-              </>
-            )}
-            Estado: <b>{partidaActivaEstado}</b>
-          </p>
-          <button onClick={() => goToBoardAndRemember(partidaActivaId)}>
-            Volver a mi partida
-          </button>
-          <button onClick={salirDeMiPartida} style={{ marginLeft: 8 }}>
-            Salir de esta partida
-          </button>
+      {/* Lista de mis partidas activas */}
+      {misPartidasActivas.length > 0 && (
+        <div className="mis-partidas-activas">
+          <h3>🎮 Mis Partidas Activas</h3>
+          {misPartidasActivas.map(({ jugador, partida }) => (
+            <div
+              key={partida.id}
+              className="partida-item"
+              style={{ border: "1px solid #ccc", padding: 12, borderRadius: 8, marginBottom: 16 }}
+            >
+              <h4>
+                {partida.codigo_acceso ? (
+                  <>Partida: <b>{partida.codigo_acceso}</b></>
+                ) : (
+                  'Partida sin código'
+                )}
+              </h4>
+              <p>
+                Estado: <b>{partida.estado}</b> · 
+                {jugador.es_anfitrion ? ' 👑 Eres anfitrión' : ' 🎲 Jugador'} ·
+                Avatar: <span style={{color: jugador.avatar_elegido || 'gray'}}>{jugador.avatar_elegido || 'default'}</span>
+              </p>
+              <button onClick={() => goToBoard(partida.id)}>
+                Ir a esta partida
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
       {!mostrarSelector ? (
         <>
-          <button onClick={() => startAction("crear")} title={hayPartidaActiva ? "Ya estás en una partida" : ""}>
+          <button onClick={() => startAction("crear")}>
             🧩 Crear nueva partida
           </button>
 
@@ -344,12 +266,12 @@ export default function Lobby() {
               value={codigo}
               onChange={(e) => setCodigo(e.target.value)}
             />
-            <button onClick={() => startAction("codigo")} title={hayPartidaActiva ? "Ya estás en una partida" : ""}>
+            <button onClick={() => startAction("codigo")}>
               ➡️ Unirse por código
             </button>
           </div>
 
-          <button onClick={() => startAction("random")} title={hayPartidaActiva ? "Ya estás en una partida" : ""}>
+          <button onClick={() => startAction("random")}>
             🎲 Unirse a una partida aleatoria
           </button>
 

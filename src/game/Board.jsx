@@ -15,7 +15,7 @@ export default function Board() {
   const [jugadores, setJugadores] = useState([]);
   const [turnoJugador, setTurnoJugador] = useState(null);
   const [nombreTurno, setNombreTurno] = useState("");
-  const API_URL = "https://hasbro-back-252s2.onrender.com";
+  const API_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
 
   const casillas = [
