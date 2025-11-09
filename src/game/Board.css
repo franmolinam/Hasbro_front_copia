@@ -1,25 +1,70 @@
 .board {
-    display: table;
-    background-color: mediumseagreen;
-    padding: 20px;
+  background: #66b384;
+  padding: 20px;
+  border-radius: 10px;
 }
 
+/* >>> FILA DE CASILLAS EN UNA SOLA LÍNEA <<< */
 .board-row {
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-wrap: nowrap;           /* no se parte en líneas */
+  gap: 14px;
+  overflow-x: auto;            /* scroll horizontal si no caben */
+  padding-bottom: 12px;
+  -webkit-overflow-scrolling: touch; /* scroll suave en móvil */
 }
 
+
+/* Cada tarjeta ocupa ancho fijo -> no se rompe a otra fila */
+.casilla-wrapper {
+  position: relative;
+  flex: 0 0 170px;             /* ancho fijo (ajusta a gusto) */
+}
+
+/* Avatares dentro de la tarjeta */
 .jugadores-casilla {
   position: absolute;
-  bottom: 5px;
-  left: 5px;
+  bottom: 8px;
+  left: 10px;
   display: flex;
-  gap: 5px;
+  gap: 6px;
 }
 
 .avatar-mini {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  border: 1px solid black;
+  border: 1px solid #00000040;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+}
+
+/* Barra superior con chips/botones */
+.board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.turno-texto {
+  margin: 6px 0 12px;
+}
+
+.badge {
+  background: #eef6ef;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+
+/* Un poco más compactas en pantallas grandes,
+   así entran las 6 sin tener que scrollear */
+@media (min-width: 1200px) {
+  .casilla-wrapper {
+    flex-basis: 150px;         /* más angostas en desktop grande */
+  }
 }

@@ -1,23 +1,32 @@
 .casilla {
-    padding: 2em;
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    transition: 0.3s;
-    border-radius: 5px;
-    margin: 10px;
-    background-color: darkolivegreen;
+  padding: 0.8em;
+  background-color: #4f6233;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.15);
+  transition: transform .15s ease;
+}
+
+.casilla:hover {
+  transform: translateY(-2px);
 }
 
 .casilla-container {
-    display: flex;
-    flex-direction: column;
-    width: 200px;
-    height: 220px;
-    justify-content: space-between;
-    padding: 2px;
-    margin: 2px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 150px;        /* más bajitas por defecto */
+  justify-content: space-between;
+  align-items: center;
 }
 
+
 .casilla img {
-    height: 150px;
-    padding: 1.5em;
+  height: 100px;        /* imagen más pequeña */
+  object-fit: contain;
+}
+
+/* En pantallas muuuy chicas, hacemos las tarjetas un poquito más altas */
+@media (max-width: 420px) {
+  .casilla-container { height: 175px; }
+  .casilla img { height: 120px; }
 }
