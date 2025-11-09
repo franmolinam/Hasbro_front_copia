@@ -1,6 +1,6 @@
 body {
   font-family: "Poppins", sans-serif;
-  background-color: #fffaf0;
+  background-color: #0cc0df;
   color: #333;
   text-align: center;
   margin: 0;
@@ -11,7 +11,7 @@ button {
   margin: 5px;
   padding: 10px 20px;
   border: none;
-  background-color: #ff914d;
+  background-color: #ff6d4d;
   color: white;
   border-radius: 8px;
   cursor: pointer;
@@ -19,7 +19,7 @@ button {
 }
 
 button:hover {
-  background-color: #e67a2f;
+  background-color: #ff6d4d;
 }
 
 input {
@@ -49,3 +49,30 @@ input {
   transform: scale(1.1);
 }
 
+.home-hero {
+  background-color: #0cc0df; 
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.logo-inicio {
+  width: min(700px, 80vw);
+  height: auto;
+  border-radius: 20px;
+  margin-bottom: 25px;
+  background-color: rgba(255, 255, 255, 0.2); 
+  padding: 8px;
+}
+
+.home-hero button {
+  background-color: #ff914d;
+  color: white;
+}
+
+.home-hero button:hover {
+  background-color: #ff914d;
+}
