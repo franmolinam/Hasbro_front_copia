@@ -96,6 +96,9 @@ export default function Board() {
   const yo = myUserId();
   const miJugador = jugadores.find((j) => j.usuarioId === yo);
 
+  // ➕ soy anfitrión si mi userId coincide con el anfitrión de la partida
+  const soyAnfitrion = !!(partida && yo && Number(yo) === Number(partida.anfitrion_usuario_id));
+
   const esMiTurno = partida && miJugador && partida.turno_actual_jugador_id === miJugador.id;
 
   // ¿Qué acción corresponde a la casilla actual del jugador?
@@ -124,12 +127,20 @@ export default function Board() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      if (!res.ok) alert(data.error || "No se pudo iniciar la partida");
+      if (!res.ok) {
+        if (res.status === 403) {
+          alert("Solo el anfitrión puede iniciar la partida.");
+        } else {
+          alert(data.error || "No se pudo iniciar la partida");
+        }
+        return;
+      }
       await fetchDatos();
     } finally {
       setCargando(false);
     }
   }
+
 
   async function moverDesdeInicio() {
     if (!miJugador) return;
@@ -220,7 +231,7 @@ export default function Board() {
         {partida?.ganador_jugador_id && <span className="badge">Ganador: {nombreDeJugador(partida.ganador_jugador_id, jugadores)}</span>}
 
         {/* Botón para iniciar la partida si está pendiente */}
-        {partida?.estado === "pendiente" && (
+        {partida?.estado === "pendiente" && soyAnfitrion && (
           <button onClick={iniciarPartida} disabled={cargando}>
             Iniciar partida
           </button>

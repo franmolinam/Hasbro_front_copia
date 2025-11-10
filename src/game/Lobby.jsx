@@ -174,22 +174,20 @@ export default function Lobby() {
     });
 
     let data;
-    const contentType = res.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    try {
       data = await res.json();
-    } else {
-      const text = await res.text();
-      console.error("Respuesta inesperada:", text);
-      data = { error: "Respuesta no válida del servidor" };
+    } catch {
+      data = {};
     }
 
-    if (res.ok && data?.partidaId) {
-      alert(`🎲 Te uniste a una partida aleatoria`);
-      goToBoard(data.partidaId);
+    if (res.ok && data?.partida?.id) {
+      alert(`🎲 Te uniste a la partida ${data.partida.codigo_acceso}`);
+      goToBoard(data.partida.id);
     } else {
       alert(`❌ Error: ${data.error || "No hay partidas disponibles"}`);
     }
   }
+
 
   // 🎨 Selección de avatar → ejecutar acción
   function handleAvatarSelect(color) {
