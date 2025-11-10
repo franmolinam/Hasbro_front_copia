@@ -24,6 +24,12 @@
   }
   to {
     transform: rotate(360deg);
+  } 
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.5;
   }
 }
 
@@ -39,4 +45,12 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.loading {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #007bff;
+  margin-top: 20px;
+  animation: blink 1.2s infinite;
 }
