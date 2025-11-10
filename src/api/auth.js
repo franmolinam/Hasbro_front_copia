@@ -1,10 +1,14 @@
 const API_URL = "http://localhost:3000";
 
-export async function login(email, password) {
+// Ahora login puede recibir un socketId opcional que se enviará al backend
+export async function login(email, password, socketId = null) {
+  const body = { email, password };
+  if (socketId) body.socketId = socketId;
+
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(body),
   });
   return res.json();
 }

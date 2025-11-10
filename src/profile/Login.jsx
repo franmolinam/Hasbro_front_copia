@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { login } from "../api/auth";
+import { connect as connectSocket, registerUser } from "../api/socket";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -14,12 +15,25 @@ export default function Login() {
 
     console.log("➡️ Iniciando login con:", email, password);
     try {
-      const data = await login(email, password);
+      // Generar un socketId único en cliente para que el backend pueda almacenarlo
+      const socketId = `socket_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+      const data = await login(email, password, socketId);
       console.log("🔍 Respuesta del servidor:", data);
       if (data.token_acceso) {
         localStorage.setItem("token", data.token_acceso);
         localStorage.setItem("nombre", data.usuario?.nombre || "Jugador");
+        // Guardar socketId en localStorage para reconexiones y usarlo en register
+        localStorage.setItem('socketId', socketId);
         alert("Inicio de sesión exitoso");
+        // Conectar el WebSocket y registrar el usuario para recibir eventos en tiempo real
+        try {
+          await connectSocket();
+          // registrar con el id de usuario devuelto por el backend
+          if (data.usuario && data.usuario.id) registerUser(data.usuario.id, { token: data.token_acceso, socketId });
+        } catch (err) {
+          console.warn('No se pudo conectar WS:', err);
+        }
+
         navigate("/bienvenida");
       } else {
         alert(data.error || "Error al iniciar sesión");

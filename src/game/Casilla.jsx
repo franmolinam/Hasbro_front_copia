@@ -1,10 +1,8 @@
 import './Casilla.css';
 import { useState } from 'react';
-import BotonCasilla from './BotonCasilla.jsx';
 
 export default function Casilla({ imgSrc, children }) {
-  const [showImage, setShowImage] = useState(true);
-  const toggleImage = () => setShowImage(!showImage);
+  const [showImage] = useState(true);
 
   return (
     <div className="casilla">
@@ -15,7 +13,7 @@ export default function Casilla({ imgSrc, children }) {
         {showImage && <img src={imgSrc} className="icono" />}
       </div>
 
-      <BotonCasilla onClick={toggleImage} showImage={showImage} />
+      {/* Botón de mostrar/ocultar eliminado por decisión de UX */}
     </div>
   );
 }

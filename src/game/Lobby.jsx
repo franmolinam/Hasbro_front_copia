@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SelectorAvatar from "../profile/SelectorAvatar.jsx";
+import { onPlayerJoined, offPlayerJoined, joinPartida } from '../api/socket';
 
 export default function Lobby() {
   const [partidaId, setPartidaId] = useState(null);
@@ -9,6 +10,7 @@ export default function Lobby() {
   const [accionPendiente, setAccionPendiente] = useState(null);
   const [misPartidasActivas, setMisPartidasActivas] = useState([]);
   const [avatarSeleccionado, setAvatarSeleccionado] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
 
@@ -68,6 +70,10 @@ export default function Lobby() {
                   jugador,
                   partida
                 });
+                
+                // ✅ NUEVO: Unirse a la sala WebSocket de esta partida
+                joinPartida(partida.id);
+                console.log('🎯 Uniéndose a sala WebSocket de partida:', partida.id);
               }
             }
           }
@@ -87,6 +93,50 @@ export default function Lobby() {
       isMounted = false;
     };
   }, [usuarioId, token]);
+
+  // 🎮 Escuchar cuando otro jugador se une a la partida (SEGUNDO useEffect INDEPENDIENTE)
+  useEffect(() => {
+    const handlePlayerJoined = ({ jugador, partidaId }) => {
+      console.log('🎮 handlePlayerJoined ejecutado:', { jugador, partidaId });
+      // Mostrar notificación temporal
+      try {
+        const nombre = jugador?.nombre || 'Un jugador';
+        setToast(`${nombre} se ha unido a la partida`);
+        setTimeout(() => setToast(null), 4000);
+      } catch (e) { console.error(e); }
+      
+      // Actualizar la partida en misPartidasActivas
+      setMisPartidasActivas(prev => {
+        console.log('📊 Estado anterior:', prev);
+        const updated = prev.map(item => {
+          if (item.partida.id === partidaId) {
+            console.log('✅ Actualizando partida:', partidaId);
+            const jugadoresActualizados = item.partida.jugadores 
+              ? [...item.partida.jugadores, jugador]
+              : [jugador];
+            return {
+              ...item,
+              partida: {
+                ...item.partida,
+                jugadores: jugadoresActualizados
+              }
+            };
+          }
+          return item;
+        });
+        console.log('📊 Estado nuevo:', updated);
+        return updated;
+      });
+    };
+
+    console.log('🎬 Registrando listener de player_joined');
+    onPlayerJoined(handlePlayerJoined);
+
+    return () => {
+      console.log('🛑 Desinscribiendo listener de player_joined');
+      offPlayerJoined(handlePlayerJoined);
+    };
+  }, []);
 
   // Helper para guardar y navegar
     const goToBoard = (id) => {
@@ -120,6 +170,9 @@ export default function Lobby() {
     }
     if (res.ok && data?.partida?.id) {
       alert(`✅ Partida creada: código ${data.partida.codigo_acceso}`);
+      // ✅ NUEVO: Unirse a la sala WebSocket de la partida que acabo de crear
+      joinPartida(data.partida.id);
+      console.log('🎯 Uniéndose a sala WebSocket de partida creada:', data.partida.id);
       goToBoard(data.partida.id);
     } else {
       alert(`❌ Error: ${data.error || "No se pudo crear la partida"}`);
@@ -132,6 +185,7 @@ export default function Lobby() {
       alert("Ingresa un código de partida");
       return;
     }
+    
     const res = await fetch(`${API_URL}/partidas/${codigo}/unirse`, {
       method: "POST",
       headers: {
@@ -153,7 +207,14 @@ export default function Lobby() {
 
     if (res.ok && data?.partidaId) {
       alert(`🎮 Te uniste a la partida ${codigo}`);
-      goToBoard(data.partidaId);
+      // ✅ CAMBIO: Unirse a la sala ANTES de navegar
+      joinPartida(data.partidaId);
+      console.log('🎯 Uniéndose a sala WebSocket de partida:', data.partidaId);
+      
+      // Pequeño delay para asegurar que el join_partida se emitió antes de navegar
+      setTimeout(() => {
+        goToBoard(data.partidaId);
+      }, 100);
     } else {
       alert(`❌ Error: ${data.error || "No se pudo unir a la partida"}`);
     }
@@ -182,6 +243,9 @@ export default function Lobby() {
 
     if (res.ok && data?.partida?.id) {
       alert(`🎲 Te uniste a la partida ${data.partida.codigo_acceso}`);
+      // ✅ NUEVO: Unirse a la sala WebSocket de la partida
+      joinPartida(data.partida.id);
+      console.log('🎯 Uniéndose a sala WebSocket de partida:', data.partida.id);
       goToBoard(data.partida.id);
     } else {
       alert(`❌ Error: ${data.error || "No hay partidas disponibles"}`);
@@ -220,6 +284,19 @@ export default function Lobby() {
 
   return (
     <div className="lobby-container">
+      {/* Toast simple */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          right: 20,
+          bottom: 20,
+          background: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          padding: '10px 14px',
+          borderRadius: 8,
+          zIndex: 9999,
+        }}>{toast}</div>
+      )}
       <h2>🎯 Lobby de Partidas</h2>
 
       {/* Lista de mis partidas activas */}
