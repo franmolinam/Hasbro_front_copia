@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SelectorAvatar from "../profile/SelectorAvatar.jsx";
-import { onPlayerJoined, offPlayerJoined, joinPartida } from '../api/socket';
+import { onPlayerJoined, offPlayerJoined, joinPartida, onGameUpdate, offGameUpdate } from '../api/socket';
 
 export default function Lobby() {
   const [partidaId, setPartidaId] = useState(null);
@@ -16,6 +16,20 @@ export default function Lobby() {
 
   const API_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
+
+  // Sanitize mensajes del servidor (remover frases como "Ahora es el turno del jugador con ID N.")
+  function sanitizeServerMessage(msg) {
+    if (!msg) return '';
+    try {
+      return msg.replace(/\s*Ahora es el turno del jugador con ID\s*\d+\.?/i, '').trim();
+    } catch (e) { return msg; }
+  }
+
+  // Color del avatar: si es 'default' o vacío, devolver azul; si es un color válido, usarlo
+  function avatarColor(val) {
+    if (!val || val === 'default') return 'blue';
+    return val;
+  }
 
   // 🔍 Id de usuario desde token de forma segura
   function getUserIdFromToken() {
@@ -138,6 +152,40 @@ export default function Lobby() {
     };
   }, []);
 
+  // 🎲 Escuchar actualizaciones del juego (p.ej. minijuego/fortuna) para mostrar notificaciones en el lobby
+  useEffect(() => {
+    const handleGameUpdateLobby = (payload) => {
+      try {
+        if (!payload || !payload.data) return;
+        // soportar payload o payload.data
+        const pid = payload.partida?.id || payload.partidaId || payload.data?.partidaId || payload.data?.partida?.id || payload.data?.partida?.id || payload.partida?.id || payload.data?.id;
+        if (!pid) return;
+
+        // Solo mostrar si la partida está en misPartidasActivas
+        const estaEnMis = misPartidasActivas.some(item => String(item.partida.id) === String(pid));
+        if (!estaEnMis) return;
+
+        const resultado = payload.resultado || payload.data?.resultado;
+        const mensaje = payload.mensaje || payload.data?.mensaje;
+        const actorId = payload.actorJugadorId || payload.jugador?.id || payload.data?.actorJugadorId || payload.data?.jugador?.id;
+        if (resultado) {
+          const nombreActor = actorId ? (misPartidasActivas.flatMap(i => i.partida.jugadores || []).find(j => j.id === actorId)?.nombre || 'Un jugador') : 'Un jugador';
+          let texto = '';
+          if (resultado === 'gano') texto = `🏆 ${nombreActor} ganó un minijuego en la partida ${pid}.`;
+          else if (resultado === 'perdio') texto = `😢 ${nombreActor} perdió un minijuego en la partida ${pid}.`;
+          else if (resultado === 'fortuna aplicada') texto = `🎁 ${sanitizeServerMessage(mensaje) || 'Se aplicó una fortuna.'}`;
+          else texto = mensaje || 'Actualización de la partida';
+
+          setToast(texto);
+          setTimeout(() => setToast(null), 7000);
+        }
+      } catch (e) { console.error(e); }
+    };
+
+    onGameUpdate(handleGameUpdateLobby);
+    return () => offGameUpdate(handleGameUpdateLobby);
+  }, [misPartidasActivas]);
+
   // Helper para guardar y navegar
     const goToBoard = (id) => {
     setPartidaId(id);
@@ -148,7 +196,8 @@ export default function Lobby() {
   async function crearPartida(colorAvatar) {
     console.log('crearPartida called, colorAvatar=', colorAvatar);
     if (!usuarioId) {
-      alert("No se pudo obtener el usuario. Inicia sesión nuevamente.");
+      setToast("No se pudo obtener el usuario. Inicia sesión nuevamente.");
+      setTimeout(() => setToast(null), 4000);
       return;
     }
     const res = await fetch(`${API_URL}/partidas`, {
@@ -169,20 +218,23 @@ export default function Lobby() {
       data = {};
     }
     if (res.ok && data?.partida?.id) {
-      alert(`✅ Partida creada: código ${data.partida.codigo_acceso}`);
+      setToast(`✅ Partida creada: código ${data.partida.codigo_acceso}`);
+      setTimeout(() => setToast(null), 4000);
       // ✅ NUEVO: Unirse a la sala WebSocket de la partida que acabo de crear
       joinPartida(data.partida.id);
       console.log('🎯 Uniéndose a sala WebSocket de partida creada:', data.partida.id);
       goToBoard(data.partida.id);
     } else {
-      alert(`❌ Error: ${data.error || "No se pudo crear la partida"}`);
+      setToast(`❌ Error: ${data.error || "No se pudo crear la partida"}`);
+      setTimeout(() => setToast(null), 4000);
     }
   }
 
   async function unirsePorCodigo(colorAvatar) {
     console.log('unirsePorCodigo called, codigo=', codigo, 'colorAvatar=', colorAvatar);
     if (!codigo) {
-      alert("Ingresa un código de partida");
+      setToast("Ingresa un código de partida");
+      setTimeout(() => setToast(null), 3000);
       return;
     }
     
@@ -206,7 +258,8 @@ export default function Lobby() {
     }
 
     if (res.ok && data?.partidaId) {
-      alert(`🎮 Te uniste a la partida ${codigo}`);
+      setToast(`🎮 Te uniste a la partida ${codigo}`);
+      setTimeout(() => setToast(null), 3000);
       // ✅ CAMBIO: Unirse a la sala ANTES de navegar
       joinPartida(data.partidaId);
       console.log('🎯 Uniéndose a sala WebSocket de partida:', data.partidaId);
@@ -216,7 +269,8 @@ export default function Lobby() {
         goToBoard(data.partidaId);
       }, 100);
     } else {
-      alert(`❌ Error: ${data.error || "No se pudo unir a la partida"}`);
+      setToast(`❌ Error: ${data.error || "No se pudo unir a la partida"}`);
+      setTimeout(() => setToast(null), 4000);
     }
   }
 
@@ -242,13 +296,15 @@ export default function Lobby() {
     }
 
     if (res.ok && data?.partida?.id) {
-      alert(`🎲 Te uniste a la partida ${data.partida.codigo_acceso}`);
+      setToast(`🎲 Te uniste a la partida ${data.partida.codigo_acceso}`);
+      setTimeout(() => setToast(null), 3000);
       // ✅ NUEVO: Unirse a la sala WebSocket de la partida
       joinPartida(data.partida.id);
       console.log('🎯 Uniéndose a sala WebSocket de partida:', data.partida.id);
       goToBoard(data.partida.id);
     } else {
-      alert(`❌ Error: ${data.error || "No hay partidas disponibles"}`);
+      setToast(`❌ Error: ${data.error || "No hay partidas disponibles"}`);
+      setTimeout(() => setToast(null), 4000);
     }
   }
 
@@ -286,16 +342,7 @@ export default function Lobby() {
     <div className="lobby-container">
       {/* Toast simple */}
       {toast && (
-        <div style={{
-          position: 'fixed',
-          right: 20,
-          bottom: 20,
-          background: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: '10px 14px',
-          borderRadius: 8,
-          zIndex: 9999,
-        }}>{toast}</div>
+        <div className="app-toast">{toast}</div>
       )}
       <h2>🎯 Lobby de Partidas</h2>
 
@@ -319,7 +366,10 @@ export default function Lobby() {
               <p>
                 Estado: <b>{partida.estado}</b> · 
                 {jugador.es_anfitrion ? ' 👑 Eres anfitrión' : ' 🎲 Jugador'} ·
-                Avatar: <span style={{color: jugador.avatar_elegido || 'gray'}}>{jugador.avatar_elegido || 'default'}</span>
+                Avatar: <span style={{display:'inline-flex', alignItems:'center', gap:8}}>
+                  <span style={{display:'inline-block', width:12, height:12, borderRadius:'50%', backgroundColor: avatarColor(jugador.avatar_elegido)}} />
+                  <span>{(jugador.avatar_elegido && jugador.avatar_elegido !== 'default') ? jugador.avatar_elegido : 'default'}</span>
+                </span>
               </p>
               <button onClick={() => goToBoard(partida.id)}>
                 Ir a esta partida

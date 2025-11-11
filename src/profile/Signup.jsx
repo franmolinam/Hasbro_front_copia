@@ -6,16 +6,19 @@ export default function Signup() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
     const data = await signup(nombre, email, password);
     if (data.email) {
-      alert("Cuenta creada exitosamente");
-      navigate("/login");
+      setToast("Cuenta creada exitosamente");
+      setTimeout(() => setToast(null), 2000);
+      setTimeout(() => navigate('/login'), 300);
     } else {
-      alert("Error al registrarse");
+      setToast("Error al registrarse");
+      setTimeout(() => setToast(null), 3000);
     }
   }
 
@@ -46,6 +49,10 @@ export default function Signup() {
         />
         <button type="submit">Registrarse</button>
       </form>
+      {toast && (
+        <div className="app-toast">{toast}</div>
+      )}
     </div>
   );
 }
+

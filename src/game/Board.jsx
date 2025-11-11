@@ -9,7 +9,7 @@ import imgEEUU from '../imagenes/bandera eeuu.png';
 import imgFortuna from '../imagenes/Fortuna.png';
 import imgMexico from '../imagenes/bandera mexico.png';
 import imgJapon from '../imagenes/bandera japon.png';
-import { connect as connectSocket, registerUser, joinPartida, leavePartida, onPlayerJoined, offPlayerJoined, onGameUpdate, offGameUpdate, onPartidaStarted, offPartidaStarted, onPlayerMoved, offPlayerMoved } from '../api/socket';
+import { connect as connectSocket, registerUser, joinPartida, leavePartida, onPlayerJoined, offPlayerJoined, onGameUpdate, offGameUpdate, onPartidaStarted, offPartidaStarted, onPlayerMoved, offPlayerMoved, onGameFinished, offGameFinished } from '../api/socket';
 
 function nombreDeJugador(id, lista = []) {
   const j = lista.find((x) => x.id === id);
@@ -140,13 +140,31 @@ export default function Board() {
       try {
         if (!mounted) return;
         if (!payload) return;
-        const pid = payload.partida?.id || payload.partidaId || payload.data?.partidaId;
+        const pid = payload.partida?.id || payload.partidaId || payload.data?.partidaId || payload.data?.partida?.id;
         if (String(pid) === String(partidaId)) {
-          await fetchDatos();
-          // notificar breve cambio de turno
-          const nombre = payload.partida?.turno_actual_jugador_id ? `Turno actualizado` : 'Partida actualizada';
-          setToast(nombre);
-          setTimeout(() => setToast(null), 3000);
+          const before = await fetchDatos();
+
+          // Si el backend envía resultado/mensaje, mostramos una notificación visible para todos
+          try {
+            // el wrapper de socket pasa msg.data como payload, pero algunos mensajes
+            // pueden venir envueltos; soportamos ambas formas.
+            const resultado = payload.resultado || payload.data?.resultado;
+            const mensajeServidor = payload.mensaje || payload.data?.mensaje;
+            const actorId = payload.actorJugadorId || payload.jugador?.id || payload.data?.actorJugadorId || payload.data?.jugador?.id;
+            if (resultado) {
+              // resolver nombre del jugador que realizó la acción
+              const nombreActor = (before.jugadores.find(j => j.id === actorId)?.Usuario?.nombre) || 'Un jugador';
+              let texto = '';
+              if (resultado === 'gano') texto = `🏆 ${nombreActor} ganó el minijuego y avanzó.`;
+              else if (resultado === 'perdio') texto = `😢 ${nombreActor} perdió el minijuego.`;
+              else if (resultado === 'fortuna aplicada') texto = `🎁 ${sanitizeServerMessage(mensajeServidor) || 'Se aplicó una fortuna.'}`;
+              else texto = sanitizeServerMessage(mensajeServidor) || 'Actualización de juego';
+
+              setToast(texto);
+              // Mostrar más tiempo para que sea visible incluso si el usuario está en otra acción
+              setTimeout(() => setToast(null), 7000);
+            }
+          } catch (e) { /* ignore */ }
         }
       } catch (e) { console.error(e); }
     };
@@ -177,6 +195,18 @@ export default function Board() {
     onGameUpdate(handleGameUpdate);
     onPartidaStarted(handlePartidaStarted);
     onPlayerMoved(handlePlayerMoved);
+    onGameFinished(handlePlayerMoved); // cuando termine, refrescar también usando mismo handler
+    // adicional: notificar final de partida
+    const handleGameFinished = (payload) => {
+      try {
+        const ganador = payload.ganador || payload.data?.ganador;
+        if (!ganador) return;
+        const nombre = ganador.nombre || 'Un jugador';
+        setToast(`🏁 Fin de la partida. Ganó ${nombre}`);
+        setTimeout(() => setToast(null), 6000);
+      } catch (e) { console.error(e); }
+    };
+    onGameFinished(handleGameFinished);
     setupSocket();
 
     return () => {
@@ -185,6 +215,8 @@ export default function Board() {
       offGameUpdate(handleGameUpdate);
       offPartidaStarted(handlePartidaStarted);
       offPlayerMoved(handlePlayerMoved);
+      offGameFinished(handlePlayerMoved);
+      offGameFinished(handleGameFinished);
       try { leavePartida(partidaId); } catch (e) { /* ignore */ }
     };
   }, [partidaId, fetchDatos]);
@@ -205,6 +237,20 @@ export default function Board() {
   const soyAnfitrion = !!(partida && yo && Number(yo) === Number(partida.anfitrion_usuario_id));
 
   const esMiTurno = partida && miJugador && partida.turno_actual_jugador_id === miJugador.id;
+
+  // Limpia mensajes enviados por el servidor que contienen texto redundante
+  function sanitizeServerMessage(msg) {
+    if (!msg) return '';
+    try {
+      return msg.replace(/\s*Ahora es el turno del jugador con ID\s*\d+\.?/i, '').trim();
+    } catch (e) { return msg; }
+  }
+
+  // Color del avatar: si es 'default' o vacío, devolver azul; si es un color válido, usarlo
+  function avatarColor(val) {
+    if (!val || val === 'default') return 'blue';
+    return val;
+  }
 
   // ¿Qué acción corresponde a la casilla actual del jugador?
   function accionDisponiblePara(jugador) {
@@ -234,9 +280,9 @@ export default function Board() {
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 403) {
-          alert("Solo el anfitrión puede iniciar la partida.");
+          setToast("Solo el anfitrión puede iniciar la partida.");
         } else {
-          alert(data.error || "No se pudo iniciar la partida");
+          setToast(data.error || "No se pudo iniciar la partida");
         }
         return;
       }
@@ -264,10 +310,12 @@ export default function Board() {
       const updated = await fetchDatos();
 
       if (!res.ok) {
-        alert(data.error || "❌ No se pudo mover desde inicio");
+        setToast(data.error || "❌ No se pudo mover desde inicio");
+        setTimeout(() => setToast(null), 4000);
       } else {
         const siguiente = updated.nombreTurno ? ` Ahora juega ${updated.nombreTurno}.` : "";
-        alert(`✅ ${data.message || "Avanzaste a la primera casilla."}${siguiente}`);
+        setToast(`✅ ${data.message || "Avanzaste a la primera casilla."}${siguiente}`);
+        setTimeout(() => setToast(null), 4000);
       }
     } finally {
       setCargando(false);
@@ -296,29 +344,33 @@ export default function Board() {
       const updated = await fetchDatos();
 
       if (!res.ok) {
-        alert(`❌ ${data.error || "Error al jugar el turno"}`);
+        setToast(`❌ ${data.error || "Error al jugar el turno"}`);
+        setTimeout(() => setToast(null), 5000);
         return;
       }
 
-      // Mensaje base por resultado
-      let msgBase = data.mensaje || "Turno completado";
+  // Mensaje base por resultado (sanitizado para quitar textos añadidos por el servidor)
+  let msgBase = sanitizeServerMessage(data.mensaje) || "Turno completado";
       if (data.resultado === "gano") msgBase = "🏆 Ganaste el minijuego y avanzas una casilla.";
       else if (data.resultado === "perdio") msgBase = "😢 Perdiste el minijuego, no avanzas.";
-      else if (data.resultado === "fortuna aplicada") msgBase = `🎁 ${data.mensaje}`;
+      else if (data.resultado === "fortuna aplicada") msgBase = `🎁 ${sanitizeServerMessage(data.mensaje)}`;
 
-      // Si la partida terminó, anuncia ganador por nombre
+  // Si la partida terminó, anuncia ganador por nombre
       if (updated.partida?.estado === "finalizada" && updated.partida?.ganador_jugador_id) {
         const nombreGanador = nombreDeJugador(updated.partida.ganador_jugador_id, updated.jugadores);
         const yoGane = updated.partida.ganador_jugador_id === miJugador.id;
         const finalMsg = yoGane
           ? `🏁 ¡Ganaste la partida, ${nombreDeJugador(miJugador.id, updated.jugadores)}!`
           : `🏁 La partida terminó. Ganó ${nombreGanador}.`;
-        alert(`${msgBase}\n\n${finalMsg}`);
+        setToast(`${msgBase} ${finalMsg}`);
+        setTimeout(() => setToast(null), 7000);
       } else {
         // Si sigue en juego: muestra el siguiente por nombre
         const siguienteNombre = updated.nombreTurno || "";
         const cola = siguienteNombre ? ` Ahora juega ${siguienteNombre}.` : "";
-        alert(`${msgBase}${cola}`);
+        // Mostrar resultado del minijuego / fortuna de forma prioritaria
+        setToast(`${msgBase}${cola}`);
+        setTimeout(() => setToast(null), 4000);
       }
     } finally {
       setCargando(false);
@@ -332,16 +384,7 @@ export default function Board() {
     <div className="board">
       {/* Toast simple */}
       {toast && (
-        <div style={{
-          position: 'fixed',
-          right: 20,
-          bottom: 20,
-          background: 'rgba(0,0,0,0.85)',
-          color: 'white',
-          padding: '10px 14px',
-          borderRadius: 8,
-          zIndex: 9999,
-        }}>{toast}</div>
+        <div className={`app-toast`}>{toast}</div>
       )}
       <div className="board-actions">
         <span className="badge">Partida #{partidaId}</span>
@@ -403,7 +446,7 @@ export default function Board() {
                       <div
                         key={jug.id}
                         className="avatar-mini"
-                        style={{ backgroundColor: jug.avatar_elegido || "#ddd" }}
+                        style={{ backgroundColor: avatarColor(jug.avatar_elegido) }}
                         title={`${jug.Usuario?.nombre || "Jugador"} (id ${jug.id})`}
                       >
                         {inicial}

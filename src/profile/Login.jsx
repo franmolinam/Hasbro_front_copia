@@ -7,6 +7,7 @@ export default function Login() {
   const [cargando, setCargando] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -20,12 +21,13 @@ export default function Login() {
       const data = await login(email, password, socketId);
       console.log("🔍 Respuesta del servidor:", data);
       if (data.token_acceso) {
-        localStorage.setItem("token", data.token_acceso);
-        localStorage.setItem("nombre", data.usuario?.nombre || "Jugador");
-        // Guardar socketId en localStorage para reconexiones y usarlo en register
-        localStorage.setItem('socketId', socketId);
-        alert("Inicio de sesión exitoso");
-        // Conectar el WebSocket y registrar el usuario para recibir eventos en tiempo real
+  localStorage.setItem("token", data.token_acceso);
+  localStorage.setItem("nombre", data.usuario?.nombre || "Jugador");
+  // Guardar socketId en localStorage para reconexiones y usarlo en register
+  localStorage.setItem('socketId', socketId);
+  // Usar alert en inicio exitoso para que el mensaje sea visible antes de redirigir
+  alert('Inicio de sesión exitoso');
+  // Conectar el WebSocket y registrar el usuario para recibir eventos en tiempo real
         try {
           await connectSocket();
           // registrar con el id de usuario devuelto por el backend
@@ -34,12 +36,14 @@ export default function Login() {
           console.warn('No se pudo conectar WS:', err);
         }
 
-        navigate("/bienvenida");
+  navigate("/bienvenida");
       } else {
-        alert(data.error || "Error al iniciar sesión");
+        setToast(data.error || "Error al iniciar sesión");
+        setTimeout(() => setToast(null), 4000);
       }  
     } catch (error) {
-      alert("❌ Error de conexión con el servidor");
+      setToast("❌ Error de conexión con el servidor");
+      setTimeout(() => setToast(null), 4000);
       console.error(error);
     } finally {
       setCargando(false);
@@ -77,6 +81,11 @@ export default function Login() {
 
         {!cargando && (
           <p>¿No tienes cuenta? <a href="/signup">Registrarse</a></p>
+      )}
+
+      {/* Toast simple */}
+      {toast && (
+        <div className="app-toast">{toast}</div>
       )}
 
       </div>

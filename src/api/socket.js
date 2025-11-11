@@ -21,6 +21,7 @@ const playerJoinedHandlers = new Set();
 const gameUpdateHandlers = new Set();
 const partidaStartedHandlers = new Set();
 const playerMovedHandlers = new Set();
+const gameFinishedHandlers = new Set();
 
 function ensureConnected() {
   if (ws && ws.readyState === WebSocket.OPEN) return Promise.resolve();
@@ -76,6 +77,9 @@ function handleIncoming(msg) {
       break;
     case 'player_moved':
       playerMovedHandlers.forEach((h) => { try { h(payload); } catch (e) { console.error(e); } });
+      break;
+    case 'game_finished':
+      gameFinishedHandlers.forEach((h) => { try { h(payload); } catch (e) { console.error(e); } });
       break;
     default:
       console.log('[socket] Mensaje recibido:', msg.type, msg);
@@ -146,6 +150,14 @@ export function onPlayerMoved(handler) {
 
 export function offPlayerMoved(handler) {
   playerMovedHandlers.delete(handler);
+}
+
+export function onGameFinished(handler) {
+  gameFinishedHandlers.add(handler);
+}
+
+export function offGameFinished(handler) {
+  gameFinishedHandlers.delete(handler);
 }
 
 export default {
