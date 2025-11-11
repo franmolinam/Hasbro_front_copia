@@ -2,23 +2,28 @@
   background: #66b384;
   padding: 20px;
   border-radius: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* >>> FILA DE CASILLAS EN UNA SOLA LÍNEA <<< */
 .board-row {
   display: flex;
-  flex-wrap: nowrap;           /* no se parte en líneas */
+  flex-wrap: wrap;
   gap: 14px;
-  overflow-x: auto;            /* scroll horizontal si no caben */
   padding-bottom: 12px;
-  -webkit-overflow-scrolling: touch; /* scroll suave en móvil */
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 
-/* Cada tarjeta ocupa ancho fijo -> no se rompe a otra fila */
+/* Cada tarjeta ocupa ancho flexible para llenar el espacio */
 .casilla-wrapper {
   position: relative;
-  flex: 0 0 170px;             /* ancho fijo (ajusta a gusto) */
+  flex: 1 1 calc(16.666% - 14px);
+  min-width: 140px;
+  max-width: 200px;
 }
 
 /* Avatares dentro de la tarjeta */
@@ -60,11 +65,37 @@
   font-size: 0.9rem;
 }
 
+/* Footer del tablero con botón de volver */
+.board-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-back-to-lobby {
+  background-color: #ff914d;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-back-to-lobby:hover {
+  background-color: #ff6d4d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 145, 77, 0.3);
+}
 
 /* Un poco más compactas en pantallas grandes,
    así entran las 6 sin tener que scrollear */
 @media (min-width: 1200px) {
   .casilla-wrapper {
-    flex-basis: 150px;         /* más angostas en desktop grande */
+    flex: 1 1 calc(16.666% - 14px);
   }
 }

@@ -14,8 +14,8 @@ export default function Signup() {
     const data = await signup(nombre, email, password);
     if (data.email) {
       setToast("Cuenta creada exitosamente");
-      setTimeout(() => setToast(null), 2000);
-      setTimeout(() => navigate('/login'), 300);
+      setTimeout(() => setToast(null), 3000);
+      setTimeout(() => navigate('/login'), 2000);
     } else {
       setToast("Error al registrarse");
       setTimeout(() => setToast(null), 3000);

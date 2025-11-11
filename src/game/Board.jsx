@@ -1,7 +1,7 @@
 import './Board.css';
 import Casilla from './Casilla';
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import imgInicio from '../imagenes/bandera inicio.png';
 import imgItalia from '../imagenes/bandera italia.png';
@@ -18,6 +18,7 @@ function nombreDeJugador(id, lista = []) {
 
 export default function Board() {
   const { partidaId } = useParams();
+  const navigate = useNavigate();
   const [jugadores, setJugadores] = useState([]);
   const [partida, setPartida] = useState(null);
   const [nombreTurno, setNombreTurno] = useState("");
@@ -458,6 +459,13 @@ export default function Board() {
             </div>
           );
         })}
+      </div>
+
+      {/* Botón para volver al lobby */}
+      <div className="board-footer">
+        <button onClick={() => navigate("/lobby")} className="btn-back-to-lobby">
+          ⬅️ Volver al Lobby
+        </button>
       </div>
     </div>
   );

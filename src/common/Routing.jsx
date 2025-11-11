@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
+import Navbar from "./Navbar";
 import UsuarioBienvenida from "../profile/UsuarioBienvenida.jsx";
 import Login from "../profile/Login.jsx";
 import Signup from "../profile/Signup.jsx";
@@ -12,6 +13,7 @@ import ProtectedRoute from "./ProtectedRoute.jsx";
 function Routing() {
   return (
     <BrowserRouter>
+      <Navbar />
       <Routes>
         {/* Rutas públicas */}
         <Route path="/" element={<App />} />
