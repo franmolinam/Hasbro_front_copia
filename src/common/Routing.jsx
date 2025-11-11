@@ -4,6 +4,7 @@ import UsuarioBienvenida from "../profile/UsuarioBienvenida.jsx";
 import Login from "../profile/Login.jsx";
 import Signup from "../profile/Signup.jsx";
 import Instructions from "../game/Instructions.jsx";
+import Nosotras from "../game/Nosotras.jsx";
 import Board from "../game/Board.jsx";
 import Lobby from "../game/Lobby.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
@@ -17,6 +18,7 @@ function Routing() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/instructions" element={<Instructions />} />
+        <Route path="/nosotras" element={<Nosotras />} />
 
         {/* Rutas protegidas */}
         <Route

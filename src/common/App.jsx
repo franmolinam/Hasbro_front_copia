@@ -20,6 +20,7 @@ export default function App() {
       <button onClick={() => navigate("/login")}>Iniciar sesión</button>
       <button onClick={() => navigate("/signup")}>Registrarse</button>
       <button onClick={() => navigate("/instructions")}>Ver instrucciones</button>
+      <button onClick={() => navigate("/nosotras")}>Nosotras</button>
     </div>
   );
 }
