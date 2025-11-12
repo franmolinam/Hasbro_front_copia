@@ -1,6 +1,5 @@
 const API_URL = "http://localhost:3000";
 
-// Ahora login puede recibir un socketId opcional que se enviará al backend
 export async function login(email, password, socketId = null) {
   const body = { email, password };
   if (socketId) body.socketId = socketId;
