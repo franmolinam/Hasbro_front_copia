@@ -27,7 +27,7 @@ export default function Board() {
   const API_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
 
-  // tablero fijo de 6 casillas
+
   const casillas = [
     { id: 0, tipo: "inicio", img: imgInicio },
     { id: 1, tipo: "minijuego", img: imgItalia },
@@ -69,12 +69,11 @@ export default function Board() {
       );
       const nombreTurnoCalc = jugadorTurno?.Usuario?.nombre || "";
 
-      // 👉 actualiza estado como antes
+
       setJugadores(jugadoresConUsuario);
       setPartida(dataPar);
       setNombreTurno(nombreTurnoCalc);
 
-      // 👉 y además retorna todo listo para usar
       return { jugadores: jugadoresConUsuario, partida: dataPar, nombreTurno: nombreTurnoCalc };
     } catch (e) {
       console.error("Error cargando datos:", e);
@@ -87,7 +86,7 @@ export default function Board() {
     fetchDatos();
   }, [fetchDatos]);
 
-  // Conexión WebSocket: conectar, registrar usuario y unirse a la sala de la partida
+  
   useEffect(() => {
     let mounted = true;
 
@@ -98,7 +97,6 @@ export default function Board() {
 
       try {
         await connectSocket();
-        // registrar para que el servidor asocie la conexión (y persista socket_id)
         try {
           const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
           const userId = payload ? payload.sub : null;
@@ -106,26 +104,20 @@ export default function Board() {
             registerUser(userId, { token, socketId });
           }
         } catch (e) {
-          // ignore parse errors
         }
-
-        // Unirse a la sala de la partida
         joinPartida(partidaId);
       } catch (e) {
         console.warn('No se pudo establecer WS en Board:', e);
       }
     }
 
-    // Handler para cuando un jugador se une. Refresca los datos de la partida.
     const handlePlayerJoined = async (payload) => {
       try {
         if (!mounted) return;
         if (!payload) return;
         const pid = payload.partidaId || payload.data?.partidaId;
         if (String(pid) === String(partidaId)) {
-          // refrescar datos
             await fetchDatos();
-            // Mostrar notificación breve
             try {
               const nombre = payload.jugador?.nombre || payload?.jugador?.nombre || 'Un jugador';
               setToast(`${nombre} se ha unido a la partida`);
@@ -145,24 +137,19 @@ export default function Board() {
         if (String(pid) === String(partidaId)) {
           const before = await fetchDatos();
 
-          // Si el backend envía resultado/mensaje, mostramos una notificación visible para todos
           try {
-            // el wrapper de socket pasa msg.data como payload, pero algunos mensajes
-            // pueden venir envueltos; soportamos ambas formas.
             const resultado = payload.resultado || payload.data?.resultado;
             const mensajeServidor = payload.mensaje || payload.data?.mensaje;
             const actorId = payload.actorJugadorId || payload.jugador?.id || payload.data?.actorJugadorId || payload.data?.jugador?.id;
             if (resultado) {
-              // resolver nombre del jugador que realizó la acción
               const nombreActor = (before.jugadores.find(j => j.id === actorId)?.Usuario?.nombre) || 'Un jugador';
               let texto = '';
-              if (resultado === 'gano') texto = `🏆 ${nombreActor} ganó el minijuego y avanzó.`;
-              else if (resultado === 'perdio') texto = `😢 ${nombreActor} perdió el minijuego.`;
-              else if (resultado === 'fortuna aplicada') texto = `🎁 ${sanitizeServerMessage(mensajeServidor) || 'Se aplicó una fortuna.'}`;
+              if (resultado === 'gano') texto = `${nombreActor} ganó el minijuego y avanzó.`;
+              else if (resultado === 'perdio') texto = `${nombreActor} perdió el minijuego.`;
+              else if (resultado === 'fortuna aplicada') texto = `${sanitizeServerMessage(mensajeServidor) || 'Se aplicó una fortuna.'}`;
               else texto = sanitizeServerMessage(mensajeServidor) || 'Actualización de juego';
 
               setToast(texto);
-              // Mostrar más tiempo para que sea visible incluso si el usuario está en otra acción
               setTimeout(() => setToast(null), 7000);
             }
           } catch (e) { /* ignore */ }
@@ -196,14 +183,13 @@ export default function Board() {
     onGameUpdate(handleGameUpdate);
     onPartidaStarted(handlePartidaStarted);
     onPlayerMoved(handlePlayerMoved);
-    onGameFinished(handlePlayerMoved); // cuando termine, refrescar también usando mismo handler
-    // adicional: notificar final de partida
+    onGameFinished(handlePlayerMoved); 
     const handleGameFinished = (payload) => {
       try {
         const ganador = payload.ganador || payload.data?.ganador;
         if (!ganador) return;
         const nombre = ganador.nombre || 'Un jugador';
-        setToast(`🏁 Fin de la partida. Ganó ${nombre}`);
+        setToast(`Fin de la partida. Ganó ${nombre}`);
         setTimeout(() => setToast(null), 6000);
       } catch (e) { console.error(e); }
     };
@@ -222,7 +208,6 @@ export default function Board() {
     };
   }, [partidaId, fetchDatos]);
 
-  // Helpers
   function myUserId() {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
@@ -233,13 +218,10 @@ export default function Board() {
   }
   const yo = myUserId();
   const miJugador = jugadores.find((j) => j.usuarioId === yo);
-
-  // ➕ soy anfitrión si mi userId coincide con el anfitrión de la partida
   const soyAnfitrion = !!(partida && yo && Number(yo) === Number(partida.anfitrion_usuario_id));
 
   const esMiTurno = partida && miJugador && partida.turno_actual_jugador_id === miJugador.id;
 
-  // Limpia mensajes enviados por el servidor que contienen texto redundante
   function sanitizeServerMessage(msg) {
     if (!msg) return '';
     try {
@@ -247,13 +229,11 @@ export default function Board() {
     } catch (e) { return msg; }
   }
 
-  // Color del avatar: si es 'default' o vacío, devolver azul; si es un color válido, usarlo
   function avatarColor(val) {
     if (!val || val === 'default') return 'blue';
     return val;
   }
 
-  // ¿Qué acción corresponde a la casilla actual del jugador?
   function accionDisponiblePara(jugador) {
     if (!partida || partida.estado !== "en_juego") return null;
     if (!jugador) return null;
@@ -263,13 +243,13 @@ export default function Board() {
     const cas = casillas.find((c) => c.id === pos);
     if (!cas) return null;
 
-    if (pos === 0) return "mover_desde_inicio";              // PATCH /jugadores/:id
-    if (cas.tipo === "minijuego") return "jugar_minijuego";   // POST /jugadas
-    if (cas.tipo === "fortuna") return "obtener_fortuna";     // POST /jugadas
+    if (pos === 0) return "mover_desde_inicio";              
+    if (cas.tipo === "minijuego") return "jugar_minijuego";   
+    if (cas.tipo === "fortuna") return "obtener_fortuna";     
     return null;
   }
 
-  // Acciones
+
   async function iniciarPartida() {
     if (!partida) return;
     setCargando(true);
@@ -306,16 +286,14 @@ export default function Board() {
         },
       });
       const data = await res.json();
-
-      // Refresca y usa los datos recién cargados
       const updated = await fetchDatos();
 
       if (!res.ok) {
-        setToast(data.error || "❌ No se pudo mover desde inicio");
+        setToast(data.error || "No se pudo mover desde inicio");
         setTimeout(() => setToast(null), 4000);
       } else {
         const siguiente = updated.nombreTurno ? ` Ahora juega ${updated.nombreTurno}.` : "";
-        setToast(`✅ ${data.message || "Avanzaste a la primera casilla."}${siguiente}`);
+        setToast(`${data.message || "Avanzaste a la primera casilla."}${siguiente}`);
         setTimeout(() => setToast(null), 4000);
       }
     } finally {
@@ -336,40 +314,35 @@ export default function Board() {
         body: JSON.stringify({
           jugadorId: miJugador.id,
           partidaId: Number(partidaId),
-          accion, // "jugar_minijuego" | "obtener_fortuna"
+          accion, 
         }),
       });
       const data = await res.json();
-
-      // Refresca para tener turno/ganador actualizados y la lista con nombres
       const updated = await fetchDatos();
 
       if (!res.ok) {
-        setToast(`❌ ${data.error || "Error al jugar el turno"}`);
+        setToast(`${data.error || "Error al jugar el turno"}`);
         setTimeout(() => setToast(null), 5000);
         return;
       }
 
-  // Mensaje base por resultado (sanitizado para quitar textos añadidos por el servidor)
   let msgBase = sanitizeServerMessage(data.mensaje) || "Turno completado";
-      if (data.resultado === "gano") msgBase = "🏆 Ganaste el minijuego y avanzas una casilla.";
-      else if (data.resultado === "perdio") msgBase = "😢 Perdiste el minijuego, no avanzas.";
-      else if (data.resultado === "fortuna aplicada") msgBase = `🎁 ${sanitizeServerMessage(data.mensaje)}`;
+      if (data.resultado === "gano") msgBase = "Ganaste el minijuego y avanzas una casilla.";
+      else if (data.resultado === "perdio") msgBase = "Perdiste el minijuego, no avanzas.";
+      else if (data.resultado === "fortuna aplicada") msgBase = `${sanitizeServerMessage(data.mensaje)}`;
 
-  // Si la partida terminó, anuncia ganador por nombre
       if (updated.partida?.estado === "finalizada" && updated.partida?.ganador_jugador_id) {
         const nombreGanador = nombreDeJugador(updated.partida.ganador_jugador_id, updated.jugadores);
         const yoGane = updated.partida.ganador_jugador_id === miJugador.id;
         const finalMsg = yoGane
-          ? `🏁 ¡Ganaste la partida, ${nombreDeJugador(miJugador.id, updated.jugadores)}!`
-          : `🏁 La partida terminó. Ganó ${nombreGanador}.`;
+          ? `¡Ganaste la partida, ${nombreDeJugador(miJugador.id, updated.jugadores)}!`
+          : `La partida terminó. Ganó ${nombreGanador}.`;
         setToast(`${msgBase} ${finalMsg}`);
         setTimeout(() => setToast(null), 7000);
       } else {
-        // Si sigue en juego: muestra el siguiente por nombre
         const siguienteNombre = updated.nombreTurno || "";
         const cola = siguienteNombre ? ` Ahora juega ${siguienteNombre}.` : "";
-        // Mostrar resultado del minijuego / fortuna de forma prioritaria
+
         setToast(`${msgBase}${cola}`);
         setTimeout(() => setToast(null), 4000);
       }
@@ -464,7 +437,7 @@ export default function Board() {
       {/* Botón para volver al lobby */}
       <div className="board-footer">
         <button onClick={() => navigate("/lobby")} className="btn-back-to-lobby">
-          ⬅️ Volver al Lobby
+          Volver al Lobby
         </button>
       </div>
     </div>

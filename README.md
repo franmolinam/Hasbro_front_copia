@@ -1,16 +1,42 @@
-# React + Vite
+# Chef Around the World - E3
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Integrantes 
+- Francisca Molina
+- Antonia Oyonarte
+- Amanda Wood
 
-Currently, two official plugins are available:
+Para acceder al proyecto apreta [este link](https://chefaround.netlify.app/).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Descripción General del Juego
+"Chef Around the World" es un juego web multijugador donde los jugadores compiten por ser el mejor chef internacional. Los jugadores deben completar desafíos culinarios en diferentes países, utilizando ingredientes y técnicas específicas para ganar puntos y reconocimiento.
 
-## React Compiler
+## Estructura del Proyecto
+- **Frontend**: `Hasbro_front_252s2` - Desarrollado con React + Vite.
+- **Backend**: `Hasbro_back_252s2` - Desarrollado con Node.js (Koa) y PostgreSQL.
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+## Reglas del Juego
+- Por turnos, cada jugador debe completar un conjunto de recetas en un tiempo limitado para pasar de nivel. El primer jugador en alcanzar la meta gana la partida.
+- Cada minijuego consiste en un país, con su comida típica, los ingredientes deben arrastrasrse con el mouse para lograr los pedidos.
+- Hay una casilla de fortuna, la cual puede otorgar o quitar tiempo del siguiente nivel, hacerlo avanzar, o retroceder en el tablero.
 
-## Expanding the ESLint configuration
+## Cambios Relevantes Respecto a Entregas Anteriores
+Se ha mejorado la funcionalidad de la API. Se ha desarrollado el frontend, generando una interfaz gráfica que permite mejorar la experiencia del usuario.
+- Componentes Principales: Página de inicio, log in, registro,  tablero de juego, perfil del jugador.
+- Organización del CSS.
+- Navegación y Barra Superior: Incluye enlaces a las secciones principales del juego y un menú de usuario.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### API del Backend
+- **Endpoints**:
+    - `POST /api/auth/login` - Autenticación de usuarios.
+    - `GET /api/games` - Obtener lista de juegos.
+- **Autenticación**: Utiliza JWT para la autenticación de usuarios.
+- **Roles y Rutas Protegidas**: Los usuarios tienen roles de "jugador" y "administrador", con rutas protegidas para cada uno.
+
+
+### Uso de WebSockets
+- Eventos para la comunicación en tiempo real entre jugadores.
+- Flujo de eventos para actualizaciones de estado del juego.
+
+## Qué falta por desarrollar
+Para la próxima entrega, se deben desarrollar el frontend de cada minijuego, el cual consiste en una  "cocina" donde cada jugador puede armar los pedidos, dependiendo del país, pero siempre con 6 ingredientes disponibles. Los mock up pueden verse en el [siguinte link](https://www.canva.com/design/DAG4g9GoOa4/wugT0koDO8aOaP3zfxkVwQ/edit?utm_content=DAG4g9GoOa4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+

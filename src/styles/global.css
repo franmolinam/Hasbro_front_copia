@@ -131,7 +131,6 @@ input {
   background-color: #ff914d;
 }
 
-/* Toasts globales */
 .app-toast {
   position: fixed;
   right: 20px;
@@ -159,16 +158,16 @@ input {
 
 .nosotras-fotos {
   display: flex;
-  flex-wrap: nowrap;           /* 🔒 Nunca salta de fila */
+  flex-wrap: nowrap;           
   gap: 16px;
-  overflow-x: auto;            /* 👈 En chico: scroll horizontal */
+  overflow-x: auto;           
   padding-bottom: 8px;
   -webkit-overflow-scrolling: touch;
-  justify-content: center;     /* Centrado en desktop */
+  justify-content: center;    
 }
 
 .foto-card {
-  flex: 0 0 260px;             /* 🔧 Ancho fijo por tarjeta */
+  flex: 0 0 260px;             
   background: rgba(255, 255, 255, 0.9);
   border-radius: 14px;
   box-shadow: 0 3px 8px rgba(0,0,0,0.1);
@@ -190,17 +189,16 @@ input {
 }
 
 
-/* Ya no necesitamos padding extra al final */
 .nosotras-page {
   padding-bottom: 0;
 }
 
-/* Full-bleed “en el fondo”, pero dentro del flujo (no fixed) */
+
 .nosotras-strip--static {
   width: 100vw;
-  margin-inline: calc(50% - 50vw);  /* centra la franja respecto al viewport */
+  margin-inline: calc(50% - 50vw);  
   display: flex;
-  justify-content: center;          /* centra las fotos en la franja */
+  justify-content: center;          
   align-items: flex-end;
   gap: 14px;
   padding: 10px 16px;
@@ -208,11 +206,11 @@ input {
   box-sizing: border-box;
 }
 
-/* Tamaño de fotos: pequeñas y siempre en una fila */
+
 .nosotras-strip--static img {
-  width: 26vw;        /* ~3 fotos en una fila sin romper */
-  max-width: 180px;   /* tope en desktop */
-  min-width: 110px;   /* no tan chicas en móviles */
+  width: 26vw;        
+  max-width: 180px;   
+  min-width: 110px;   
   height: auto;
   border-radius: 10px;
   object-fit: cover;

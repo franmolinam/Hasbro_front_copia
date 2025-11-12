@@ -7,14 +7,11 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [token, setToken] = useState(null);
 
-  // Sincronizar token desde localStorage cada vez que cambia la ruta
-  // Esto asegura que después de login/logout se actualice correctamente
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     setToken(storedToken);
   }, [location.pathname]);
 
-  // No mostrar navbar en la vista del tablero
   if (location.pathname.startsWith("/board")) {
     return null;
   }

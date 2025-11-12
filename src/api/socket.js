@@ -1,12 +1,6 @@
-// Simple WebSocket client wrapper
-// Exporta funciones: connect, registerUser, joinPartida, leavePartida, onPlayerJoined, offPlayerJoined
-
 const WS_URL = (() => {
-  // Ajustable: intenta conectar al backend en localhost:3000 por defecto
   try {
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    // Si la app frontend corre en desarrollo y el backend está en localhost:3000,
-    // preferimos esa URL.
     if (window.location.hostname === 'localhost') return `ws://localhost:3000`;
     return `${proto}://${window.location.host}`;
   } catch {
@@ -47,7 +41,6 @@ function ensureConnected() {
 
     ws.addEventListener('close', () => {
       console.log('[socket] Desconectado');
-      // limpiar para permitir reconnect
       ws = null;
     });
 
@@ -103,7 +96,6 @@ export async function connect() {
 
 export function registerUser(userId, opts = {}) {
   if (!userId) return;
-  // opts: { token, socketId }
   const payload = { type: 'register', userId };
   if (opts.socketId) payload.socketId = opts.socketId;
   if (opts.token) payload.token = opts.token;

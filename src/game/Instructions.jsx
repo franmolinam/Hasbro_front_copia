@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 export default function Instructions() {
   const navigate = useNavigate();
 
-  // Back estático: si hay historia, vuelve; si no, cae al home
   function handleBack() {
     const canGoBack =
       window.history.length > 1 &&
@@ -12,7 +11,7 @@ export default function Instructions() {
       window.history.state.idx > 0;
 
     if (canGoBack) navigate(-1);
-    else navigate("/"); // fallback estático (sin mirar token/localStorage)
+    else navigate("/"); 
   }
 
   return (

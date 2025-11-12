@@ -5,8 +5,6 @@ import fotoAmanda from "../imagenes/amanda.png";
 
 export default function Nosotras() {
   const navigate = useNavigate();
-
-  // Back estático: si hay historia, vuelve; si no, cae al home
   function handleBack() {
     const canGoBack =
       window.history.length > 1 &&
@@ -15,7 +13,7 @@ export default function Nosotras() {
       window.history.state.idx > 0;
 
     if (canGoBack) navigate(-1);
-    else navigate("/"); // fallback al inicio
+    else navigate("/"); 
   }
 
   return (
