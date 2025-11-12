@@ -24,7 +24,7 @@ export default function Board() {
   const [nombreTurno, setNombreTurno] = useState("");
   const [cargando, setCargando] = useState(false);
   const [toast, setToast] = useState(null);
-  const API_URL = "http://localhost:3000";
+  const API_URL = "https://hasbro-back-252s2.onrender.com";
   const token = localStorage.getItem("token");
 
 

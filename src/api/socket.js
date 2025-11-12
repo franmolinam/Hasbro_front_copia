@@ -1,14 +1,14 @@
 const WS_URL = (() => {
   try {
-    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    if (window.location.hostname === 'localhost') return `ws://localhost:3000`;
-    return `${proto}://${window.location.host}`;
+    // Para Render, siempre usar WSS (WebSocket Secure)
+    // Render requiere HTTPS/WSS, no acepta WS sin SSL
+    return 'wss://hasbro-back-252s2.onrender.com';
   } catch {
-    return 'ws://localhost:3000';
+    return 'wss://hasbro-back-252s2.onrender.com';
   }
 })();
-
 let ws = null;
+
 let openPromise = null;
 
 const playerJoinedHandlers = new Set();

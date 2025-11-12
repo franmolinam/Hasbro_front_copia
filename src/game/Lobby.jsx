@@ -14,7 +14,7 @@ export default function Lobby() {
 
   const navigate = useNavigate();
 
-  const API_URL = "http://localhost:3000";
+  const API_URL = "https://hasbro-back-252s2.onrender.com";
   const token = localStorage.getItem("token");
 
   function sanitizeServerMessage(msg) {

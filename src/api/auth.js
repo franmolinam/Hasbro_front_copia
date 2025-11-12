@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = "https://hasbro-back-252s2.onrender.com";
 
 export async function login(email, password, socketId = null) {
   const body = { email, password };
