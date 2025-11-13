@@ -7,6 +7,10 @@
 
 Para acceder al proyecto apreta [este link](https://chefaround.netlify.app/).
 
+Para construir el entorno de desarrollo del frontend, es necesario correr yarn install en la terminal del repositorio del frontend. Con este comando se descarga e instala todas las librerías necesarias para que el frontend funcione: react, vite y el resto de las dependencias definidad en package.json.
+
+Para levantar la interfaz de la aplicación y conectarse a la API, es necesario correr yarn dev en la terminal del backend y luego, una vez que está corriendo el backend, en la terminal del frontend correr primero nvm use 20 (es necesaria esta versión de node) y luego yarn dev y se levantará la interfaz conectada al render de la base de datos. yarn dev arranca el servidor de desarrollo de Vite y compila el códgio de React para que los cambios se vean al instante.
+
 ## Descripción General del Juego
 "Chef Around the World" es un juego web multijugador donde 2 a 4 usuarios compiten por convertirse en el Mejor Chef del Mundo. 
 Cada partida comienza en un tablero de 6 casillas que rerpesenta una ruta culinaria internacional. En cada país, los jugadores deben completar minijuegos de cocina, preparando platos típicos arrastrando los ingredientes correctos antes de que se acabe el tiempo. Además, a medida que se avanza en el tablero se va enfrentando una mayor dificultad en los minijuegos.
@@ -91,8 +95,8 @@ Se mejoró la funcionalidad de la API. Se desarrolló el frontend, generando una
     Otros códigos que puede retornar el servidor son de errores, por ejemplo 400 Bad Request cuando el jugador o la partida no fue encontrada, si la partida no esta activa, o no es el turno de este jugador, la casilla actual no fue encontrada o la accion no corresponde con la casilla actual. Nuvamente, todos estos errores solo son posibles de POSTMAN, ya que en el frontend no le pueden ocurrir al usuario.
     Este endpoint se integra en el frontend en Borad.jsx, en la función jugar(accion). El botón "jugar minijuego" llama a jugar("jugar_minijuego") y el botón "Tomar fortuna" llama a jugar("obtener_fortuna"). Luego de esto el frontend interpreta el resultado y muestra el toast "Ganaste el minijuego y avanzas una casilla. Ahora juega {otroJugador}" o "Perdiste el minijuego, no avanzas. Ahora juega {otroJugador}" o, en caso de estar en una fortuna, un toast posible es "El jugador retrocede 1 casillas. Ahora juega {otroJugador}". Si la partida terminó, muestra un toast indicando quien ganó.
 
-- **Autenticación**: Se utiliza JWT para restringir el acceso a ciertas rutas según el tipo de usuario.
-- **Roles y Rutas Protegidas**: Los usuarios tienen roles de "jugador" y "administrador", con rutas protegidas para cada uno.
+- **Autenticación**: Se utiliza JWT para restringir el acceso a ciertas rutas según el tipo de usuario. Sólo usuarios registrados pueden entrar a vista bienvenida usuario, lobby de partidas y tablero de partidas. Rutas especificas en Readme de backend.
+- **Roles y Rutas Protegidas**: Los usuarios tienen roles de "jugador" y "administrador", con rutas protegidas para cada uno. Explicación de cada uno en "Guía de uso" y de JWT en readme del backend.
 
 ## Guía de uso
 ### Nivel Usuario (Jugadores)
