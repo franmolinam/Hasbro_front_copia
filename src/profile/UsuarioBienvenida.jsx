@@ -15,10 +15,10 @@ export default function UsuarioBienvenida() {
       />
 
       <h1>¡Hola, {nombre}!</h1>
-      <p>Bienvenido a Chef Around the World 🌍</p>
+      <p>Bienvenido a Chef Around the World</p>
 
       <button onClick={() => navigate("/lobby")}>
-        🎮 Ir al lobby de partidas
+        Ir al lobby de partidas
       </button>
     </div>
   );

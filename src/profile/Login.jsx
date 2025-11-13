@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
     setCargando(true);
 
-    console.log("➡️ Iniciando login con:", email, password);
+    console.log("Iniciando login con:", email, password);
     try {
       const socketId = `socket_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
       const data = await login(email, password, socketId);

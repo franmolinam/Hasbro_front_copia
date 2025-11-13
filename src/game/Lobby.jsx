@@ -273,7 +273,7 @@ export default function Lobby() {
     }
 
     if (res.ok && data?.partida?.id) {
-      setToast(`🎲 Te uniste a la partida ${data.partida.codigo_acceso}`);
+      setToast(`Te uniste a la partida ${data.partida.codigo_acceso}`);
       setTimeout(() => setToast(null), 3000);
       joinPartida(data.partida.id);
       console.log('Uniéndose a sala WebSocket de partida:', data.partida.id);
@@ -362,7 +362,7 @@ export default function Lobby() {
               onChange={(e) => setCodigo(e.target.value)}
             />
             <button onClick={() => startAction("codigo")}>
-              ➡️ Unirse por código
+              Unirse por código
             </button>
           </div>
 

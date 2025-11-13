@@ -13,7 +13,6 @@ export default function Casilla({ imgSrc, children }) {
         {showImage && <img src={imgSrc} className="icono" />}
       </div>
 
-      {/* Botón de mostrar/ocultar eliminado por decisión de UX */}
     </div>
   );
 }
