@@ -37,12 +37,12 @@ export default function Navbar() {
         <ul className="nav-menu">
           <li>
             <button onClick={() => navigate("/instructions")} className="nav-link">
-              📖 Instrucciones
+              Instrucciones
             </button>
           </li>
           <li>
             <button onClick={() => navigate("/nosotras")} className="nav-link">
-              👥 Nosotras
+              Nosotras
             </button>
           </li>
         </ul>
@@ -52,15 +52,15 @@ export default function Navbar() {
           {!token ? (
             <>
               <button onClick={() => navigate("/login")} className="nav-btn login-btn">
-                🔓 Login
+                Login
               </button>
               <button onClick={() => navigate("/signup")} className="nav-btn signup-btn">
-                ✍️ Registro
+                Registro
               </button>
             </>
           ) : (
             <button onClick={handleLogout} className="nav-btn logout-btn">
-              🚪 Logout
+              Logout
             </button>
           )}
         </div>

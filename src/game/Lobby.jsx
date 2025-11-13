@@ -370,7 +370,7 @@ export default function Lobby() {
             Unirse a una partida aleatoria
           </button>
 
-          <button onClick={() => navigate("/bienvenida")}>⬅️ Volver</button>
+          <button onClick={() => navigate("/bienvenida")}>Volver</button>
         </>
       ) : (
         <SelectorAvatar onSelect={handleAvatarSelect} onCancel={handleCancelarSeleccion} />

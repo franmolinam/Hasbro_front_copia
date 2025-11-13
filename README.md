@@ -110,7 +110,7 @@ Se mejoró la funcionalidad de la API. Se desarrolló el frontend, generando una
 Se encuentra documentada la implementación y eventos gestionados a través de WebSockets en el Readme del backend.
 
 ## Qué falta por desarrollar
-- Funcionalidad de que el host pueda echar a un jugador de la partida.
+- Funcionalidad de que el host pueda expulsar a un jugador de la partida.
 - Opción para jugadores de abandonar la partida y quedar inactivos.
-- Desarrollar el frontend de cada minijuego, el cual consiste en una  "cocina" donde cada jugador puede armar los pedidos, dependiendo del país, pero siempre con 6 ingredientes disponibles. Los mock up pueden verse en el [siguinte link](https://www.canva.com/design/DAG4g9GoOa4/wugT0koDO8aOaP3zfxkVwQ/edit?utm_content=DAG4g9GoOa4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+- Desarrollar el frontend de cada minijuego, el cual consiste en una  "cocina" donde cada jugador puede armar los pedidos, dependiendo del país, pero siempre con 6 ingredientes disponibles. Los mock up pueden verse en el [siguinte link](https://www.canva.com/design/DAG4g9GoOa4/wugT0koDO8aOaP3zfxkVwQ/edit?utm_content=DAG4g9GoOa4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton). Además se encuentran en pdf dentro de este mismo repositorio. 
 

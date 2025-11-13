@@ -52,7 +52,7 @@ export default function Login() {
       
       {cargando ? (
         <div className="loading">
-          ⏳ Iniciando sesión, por favor espera...
+          Iniciando sesión, por favor espera...
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
