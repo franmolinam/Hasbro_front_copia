@@ -94,11 +94,19 @@ Se mejoró la funcionalidad de la API. Se desarrolló el frontend, generando una
 - **Autenticación**: Se utiliza JWT para restringir el acceso a ciertas rutas según el tipo de usuario.
 - **Roles y Rutas Protegidas**: Los usuarios tienen roles de "jugador" y "administrador", con rutas protegidas para cada uno.
 
+## Guía de uso
+### Nivel Usuario (Jugadores)
+- Un usuario no registrado solo puede acceder a la página de inicio, página de instrucciones y página de nosotras. 
+- Para poder jugar el usuario tiene que crear una cuenta mediante la página de registro. Es importante que la contraseña tenga una letra, un número y un caracter especial para poder crearse bien la cuenta. Luego de esto, se debe iniciar sesión con la cuenta creada, y lo redirigirá al perfil de bienvenida del usuario. Una vez ahí, se puede acceder a cualquier sección desde la barra de navegación (home, instrucciones, nosotras, logout) y se puede ir al lobby de partidas del usuario con el botón "Ir al lobby de partidas" abajo en la vista. Desde el lobby se puede crear una partida nueva, unirse por código a una existente o unirse a una partida aleatoria. También hay un botón para volver a la página de bienvenida del usuario. Además, se presenta una lista de partidas activas (si es que se tiene) con su código, estado, indicación de tipo de jugador (normal o anfitrión) y avatar. Si se entra de cualquier forma a una partida, lo primero que ofrece es escoger el avatar para su jugador.
+- El jugador host de la partida es el único que puede iniciarla (solo a él le aparece el botón de "iniciar partida" en la vista del tablero). Luego en la partida ambos (jugador normal y host) pueden realizar las mismas cosas como jugar minijuegos y obtener fortunas.
+- El administrador no tiene interfaz gráfica. Sus acciones se ejecutan únicamente vía API (Postman). El permiso especial del administrador es que puede resetear la base de datos con el endpoint `POST /admin/reset-db`. Es una ruta que permite reiniciar completamente la base de datos, eliminando usuarios, partidas, jugadas, etc. Si es que se está corriendo en local es necesario volver a ejecutar las seeds. Es protegida solo para el tipo admin y requiere un token de administrador.
+
 
 ### Uso de WebSockets
-- Eventos para la comunicación en tiempo real entre jugadores.
-- Flujo de eventos para actualizaciones de estado del juego.
+Se encuentra documentada la implementación y eventos gestionados a través de WebSockets en el Readme del backend.
 
 ## Qué falta por desarrollar
-Para la próxima entrega, se deben desarrollar el frontend de cada minijuego, el cual consiste en una  "cocina" donde cada jugador puede armar los pedidos, dependiendo del país, pero siempre con 6 ingredientes disponibles. Los mock up pueden verse en el [siguinte link](https://www.canva.com/design/DAG4g9GoOa4/wugT0koDO8aOaP3zfxkVwQ/edit?utm_content=DAG4g9GoOa4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+- Funcionalidad de que el host pueda echar a un jugador de la partida.
+- Opción para jugadores de abandonar la partida y quedar inactivos.
+- Desarrollar el frontend de cada minijuego, el cual consiste en una  "cocina" donde cada jugador puede armar los pedidos, dependiendo del país, pero siempre con 6 ingredientes disponibles. Los mock up pueden verse en el [siguinte link](https://www.canva.com/design/DAG4g9GoOa4/wugT0koDO8aOaP3zfxkVwQ/edit?utm_content=DAG4g9GoOa4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
