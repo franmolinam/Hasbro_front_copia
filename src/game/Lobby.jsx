@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import SelectorAvatar from "../profile/SelectorAvatar.jsx";
 import { onPlayerJoined, offPlayerJoined, joinPartida, onGameUpdate, offGameUpdate } from '../api/socket';
 
@@ -14,7 +14,7 @@ export default function Lobby() {
 
   const navigate = useNavigate();
 
-  const API_URL = "https://hasbro-back-252s2.onrender.com";
+  const API_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
 
   function sanitizeServerMessage(msg) {
@@ -40,63 +40,63 @@ export default function Lobby() {
   }
   const usuarioId = getUserIdFromToken();
 
-  useEffect(() => {
+  const location = useLocation();
+
+  const fetchMisPartidasActivas = useCallback(async () => {
     let isMounted = true;
-    async function fetchMisPartidasActivas() {
-      if (!usuarioId || !token || !isMounted) return;
-      try {
-        const res = await fetch(
-          `${API_URL}/jugadores?usuarioId=${usuarioId}&inactivo=false&includePartida=true`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+    if (!usuarioId || !token) return;
+    try {
+      const res = await fetch(
+        `${API_URL}/jugadores?usuarioId=${usuarioId}&inactivo=false&includePartida=true`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-        console.log('Buscando partidas activas...'); 
-        if (!res.ok) {
-          console.error('Error al buscar partidas:', await res.text());
-          return;
-        }
-        const data = await res.json();
-        console.log('Jugadores encontrados:', JSON.stringify(data, null, 2));
-        const partidasActivas = [];
+      console.log('Buscando partidas activas...');
+      if (!res.ok) {
+        console.error('Error al buscar partidas:', await res.text());
+        return;
+      }
+      const data = await res.json();
+      console.log('Jugadores encontrados:', JSON.stringify(data, null, 2));
+      const partidasActivas = [];
 
-        for (const jugador of data) {
-          console.log('Verificando jugador:', jugador.id, 'partidaId:', jugador.partidaId);
-          
-          if (jugador.partidaId) {
-            const partidaRes = await fetch(`${API_URL}/partidas/${jugador.partidaId}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            if (partidaRes.ok) {
-              const partida = await partidaRes.json();
-              console.log('Partida encontrada:', partida);
-              
-              if (["pendiente", "en_juego"].includes(partida.estado)) {
-                partidasActivas.push({
-                  jugador,
-                  partida
-                });
+      for (const jugador of data) {
+        console.log('Verificando jugador:', jugador.id, 'partidaId:', jugador.partidaId);
 
-                joinPartida(partida.id);
-                console.log('Uniéndose a sala WebSocket de partida:', partida.id);
-              }
+        if (jugador.partidaId) {
+          const partidaRes = await fetch(`${API_URL}/partidas/${jugador.partidaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (partidaRes.ok) {
+            const partida = await partidaRes.json();
+            console.log('Partida encontrada:', partida);
+
+            if (["pendiente", "en_juego"].includes(partida.estado)) {
+              partidasActivas.push({
+                jugador,
+                partida
+              });
+
+              try { joinPartida(partida.id); console.log('Uniéndose a sala WebSocket de partida:', partida.id); } catch(e) {}
             }
           }
         }
-
-        if (isMounted) {
-          setMisPartidasActivas(partidasActivas);
-        }
-      } catch (error) {
-        console.error('Error al cargar partidas:', error);
       }
+
+      if (isMounted) {
+        setMisPartidasActivas(partidasActivas);
+      }
+    } catch (error) {
+      console.error('Error al cargar partidas:', error);
     }
+    return () => { isMounted = false; };
+  }, [API_URL, token, usuarioId]);
+
+  // Ejecutar al montar y cada vez que cambie la ruta (volver al lobby)
+  useEffect(() => {
     fetchMisPartidasActivas();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [usuarioId, token]);
+  }, [fetchMisPartidasActivas, location.pathname]);
 
   useEffect(() => {
     const handlePlayerJoined = ({ jugador, partidaId }) => {
@@ -160,6 +160,11 @@ export default function Lobby() {
           else texto = mensaje || 'Actualización de la partida';
           setToast(texto);
           setTimeout(() => setToast(null), 7000);
+          // Si la actualización indica que la partida terminó, refrescamos la lista
+          const finished = (payload.type === 'game_finished') || (payload.data && payload.data.partida && payload.data.partida.estado === 'finalizada');
+          if (finished) {
+            try { fetchMisPartidasActivas(); } catch(e) { console.warn('No se pudo refrescar tras game_finished', e); }
+          }
         }
       } catch (e) { console.error(e); }
     };
@@ -314,7 +319,7 @@ export default function Lobby() {
       {toast && (
         <div className="app-toast">{toast}</div>
       )}
-      <h2>Lobby de Partidas</h2>
+      <h2> Lobby de Partidas</h2>
 
       {/* Lista de mis partidas activas */}
       {misPartidasActivas.length > 0 && (

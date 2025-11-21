@@ -1,0 +1,38 @@
+.minijuego-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.minijuego-card{
+  width: 900px;
+  max-width: 95%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  padding: 16px;
+}
+.minijuego-header{display:flex;justify-content:space-between;align-items:center}
+.minijuego-timer{font-weight:700}
+.penalty{color: #ff3b3b;font-weight:800;margin-top:4px}
+.minijuego-body{display:flex;gap:16px;margin-top:12px}
+.minijuego-pedido{width:220px}
+.pedido-card{background:#fdf2d6;padding:12px;border-radius:8px;border:2px solid #e0c97a}
+.pedido-ingredientes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pedido-ing{background:#fff;padding:6px 8px;border-radius:6px;border:1px solid #ddd}
+.minijuego-cocina{flex:1;display:flex;gap:12px}
+.ingredientes-list{display:flex;flex-direction:column;gap:8px;width:260px}
+.ingrediente-btn{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1px solid #ccc;background:#fafafa;cursor:pointer}
+.ingrediente-btn.selected{outline:3px solid #88c}
+.ingrediente-icon{width:36px;height:36px;border-radius:6px}
+.tabla-cocina{flex:1;border-radius:12px;background:#f06d5a;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:12px;cursor:pointer}
+.tabla-selected{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.sel-pill{background:rgba(255,255,255,0.2);padding:4px 8px;border-radius:999px}
+.minijuego-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.minijuego-actions button{padding:8px 12px;border-radius:8px}
+.resultado{font-weight:700;padding:6px 10px;border-radius:8px}
+.resultado.gano{background:#d4ffd9;color:#05620f}
+.resultado.perdio{background:#ffdede;color:#7a0d0d}

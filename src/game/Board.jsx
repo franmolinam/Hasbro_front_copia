@@ -10,6 +10,7 @@ import imgFortuna from '../imagenes/Fortuna.png';
 import imgMexico from '../imagenes/bandera mexico.png';
 import imgJapon from '../imagenes/bandera japon.png';
 import { connect as connectSocket, registerUser, joinPartida, leavePartida, onPlayerJoined, offPlayerJoined, onGameUpdate, offGameUpdate, onPartidaStarted, offPartidaStarted, onPlayerMoved, offPlayerMoved, onGameFinished, offGameFinished } from '../api/socket';
+import MinijuegoBase from './MinijuegoBase.jsx';
 
 function nombreDeJugador(id, lista = []) {
   const j = lista.find((x) => x.id === id);
@@ -24,7 +25,9 @@ export default function Board() {
   const [nombreTurno, setNombreTurno] = useState("");
   const [cargando, setCargando] = useState(false);
   const [toast, setToast] = useState(null);
-  const API_URL = "https://hasbro-back-252s2.onrender.com";
+  const [showMinijuego, setShowMinijuego] = useState(false);
+  const [minijuegoPayload, setMinijuegoPayload] = useState(null);
+  const API_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
 
 
@@ -367,7 +370,7 @@ export default function Board() {
         {partida?.ganador_jugador_id && <span className="badge">Ganador: {nombreDeJugador(partida.ganador_jugador_id, jugadores)}</span>}
 
         {/* Botón para iniciar la partida si está pendiente */}
-        {partida?.estado === "pendiente" && soyAnfitrion && (
+        {partida?.estado === "pendiente" && (soyAnfitrion || miJugador?.es_anfitrion) && (
           <button onClick={iniciarPartida} disabled={cargando}>
             Iniciar partida
           </button>
@@ -382,9 +385,127 @@ export default function Board() {
               </button>
             )}
             {miAccion === "jugar_minijuego" && (
-              <button onClick={() => jugar("jugar_minijuego")} disabled={cargando}>
-                Jugar minijuego
-              </button>
+              <>
+                <button onClick={async () => {
+                  if (!miJugador || !partida) return;
+                  setCargando(true);
+                  try {
+                    const pos = miJugador.posicion_actual;
+                    const resCas = await fetch(`${API_URL}/casillas/por_partida/${partidaId}/pos/${pos}`);
+                    if (!resCas.ok) {
+                      const err = await resCas.json().catch(() => ({}));
+                      setToast(`No se pudo cargar el minijuego: ${err.error || resCas.statusText}`);
+                      setTimeout(() => setToast(null), 4000);
+                      return;
+                    }
+                    const casilla = await resCas.json();
+                    const mj = casilla.Minijuego;
+                    if (!mj) {
+                      setToast('No hay minijuego asociado a esta casilla');
+                      setTimeout(() => setToast(null), 3000);
+                      return;
+                    }
+
+                    // ingredientesDisponibles puede venir como array o string
+                    let ingredientesDisponibles = mj.ingredientes_disponibles;
+                    if (!Array.isArray(ingredientesDisponibles)) {
+                      try { ingredientesDisponibles = JSON.parse(ingredientesDisponibles); } catch { ingredientesDisponibles = []; }
+                    }
+
+                    // construir arreglo de pedidos (si existen) o fallback
+                    let pedidosArr = [];
+                    if (mj.Pedidos && mj.Pedidos.length > 0) {
+                      pedidosArr = mj.Pedidos.map((p) => {
+                        let ingredientesReq = [];
+                        try {
+                          ingredientesReq = JSON.parse(p.ingredientes_solicitados);
+                          if (!Array.isArray(ingredientesReq)) throw new Error('not array');
+                        } catch {
+                          ingredientesReq = String(p.ingredientes_solicitados || '').split(',').map(x => x.trim()).filter(Boolean);
+                        }
+                        return { id: p.id, nombre: `${mj.tipo_comida} pedido`, ingredientes: ingredientesReq };
+                      });
+                    } else {
+                      const picks = ingredientesDisponibles.slice(0, Math.min(3, ingredientesDisponibles.length));
+                      pedidosArr = [{ id: null, nombre: `${mj.tipo_comida} pedido`, ingredientes: picks }];
+                    }
+
+                    // map ingredientesDisponibles a objetos con key/label
+                    const ingredientesMap = ingredientesDisponibles.map((k) => ({ key: k, label: k.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase()), color: '#ddd' }));
+
+                    const bonus = miJugador?.bonus_tiempo || 0;
+                    const baseTime = mj.tiempo_limite_base || 30;
+                    const tiempoTotal = Math.max(5, baseTime + Number(bonus));
+                    setMinijuegoPayload({
+                      pais: casilla.Pais || { nombre: 'País' },
+                      tiempo: tiempoTotal,
+                      pedidos: pedidosArr,
+                      ingredientesDisponibles: ingredientesMap,
+                      minijuegoId: mj.id,
+                    });
+                    setShowMinijuego(true);
+
+                  } catch (e) {
+                    console.error('Error cargando minijuego real:', e);
+                    setToast('Error cargando minijuego.');
+                    setTimeout(() => setToast(null), 3000);
+                  } finally {
+                    setCargando(false);
+                  }
+                }} disabled={cargando}>
+                  Jugar minijuego
+                </button>
+                    {showMinijuego && minijuegoPayload && (
+                  <MinijuegoBase
+                    pais={minijuegoPayload.pais}
+                    tiempo={minijuegoPayload.tiempo}
+                    pedidos={minijuegoPayload.pedidos}
+                    ingredientesDisponibles={minijuegoPayload.ingredientesDisponibles}
+                    onCancel={() => setShowMinijuego(false)}
+                    onComplete={async (resultado) => {
+                      setShowMinijuego(false);
+                      try {
+                        setCargando(true);
+                        const res = await fetch(`${API_URL}/jugadas`, {
+                          method: "POST",
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            jugadorId: miJugador.id,
+                            partidaId: Number(partidaId),
+                            accion: "jugar_minijuego",
+                            resultado: resultado,
+                            minijuegoId: minijuegoPayload.minijuegoId,
+                          }),
+                        });
+                        const data = await res.json();
+                        const updated = await fetchDatos();
+
+                        if (!res.ok) {
+                          setToast(`${data.error || "Error al jugar el turno"}`);
+                          setTimeout(() => setToast(null), 5000);
+                          return;
+                        }
+
+                        let msgBase = sanitizeServerMessage(data.mensaje) || "Turno completado";
+                        if (data.resultado === "gano") msgBase = "Ganaste el minijuego y avanzas una casilla.";
+                        else if (data.resultado === "perdio") msgBase = "Perdiste el minijuego, no avanzas.";
+
+                        const siguienteNombre = updated.nombreTurno || "";
+                        const cola = siguienteNombre ? ` Ahora juega ${siguienteNombre}.` : "";
+                        setToast(`${msgBase}${cola}`);
+                        setTimeout(() => setToast(null), 4000);
+                      } catch (e) {
+                        console.error('Error al enviar resultado del minijuego', e);
+                      } finally {
+                        setCargando(false);
+                      }
+                    }}
+                  />
+                )}
+              </>
             )}
             {miAccion === "obtener_fortuna" && (
               <button onClick={() => jugar("obtener_fortuna")} disabled={cargando}>

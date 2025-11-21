@@ -9,6 +9,29 @@ export default function Navbar() {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      try {
+        const parts = storedToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          if (payload && payload.exp && Date.now() / 1000 > payload.exp) {
+            // token expirado: limpiamos storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('socketId');
+            localStorage.removeItem('nombre');
+            setToken(null);
+            return;
+          }
+        }
+      } catch (e) {
+        // token malformed: limpiar también
+        localStorage.removeItem('token');
+        localStorage.removeItem('socketId');
+        localStorage.removeItem('nombre');
+        setToken(null);
+        return;
+      }
+    }
     setToken(storedToken);
   }, [location.pathname]);
 
