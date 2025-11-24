@@ -1,0 +1,90 @@
+.endgame-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+}
+
+.endgame-card {
+  background: white;
+  border-radius: 12px;
+  max-width: 720px;
+  width: calc(100% - 48px);
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+.endgame-visual {
+  width: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f7f7f7, #efefef);
+}
+
+.endgame-card.winner .endgame-visual {
+  background: linear-gradient(135deg, #fff7e6, #ffe8b3);
+}
+
+.endgame-card.loser .endgame-visual {
+  background: linear-gradient(135deg, #f5f5f7, #e9e9ee);
+}
+
+.endgame-emoji {
+  font-size: 88px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.endgame-content {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.endgame-content h2 {
+  margin: 0 0 8px 0;
+  font-size: 22px;
+}
+
+.endgame-sub {
+  margin: 0 0 18px 0;
+  color: #333;
+}
+
+.endgame-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-primary {
+  background: #2b8aef;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-secondary {
+  background: #f1f1f1;
+  color: #333;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-primary:disabled, .btn-secondary:disabled { opacity: 0.6; cursor: default; }

@@ -10,6 +10,7 @@ import imgFortuna from '../imagenes/Fortuna.png';
 import imgMexico from '../imagenes/bandera mexico.png';
 import imgJapon from '../imagenes/bandera japon.png';
 import { connect as connectSocket, registerUser, joinPartida, leavePartida, onPlayerJoined, offPlayerJoined, onGameUpdate, offGameUpdate, onPartidaStarted, offPartidaStarted, onPlayerMoved, offPlayerMoved, onGameFinished, offGameFinished } from '../api/socket';
+import EndGameModal from './EndGameModal';
 import MinijuegoBase from './MinijuegoBase.jsx';
 
 function nombreDeJugador(id, lista = []) {
@@ -27,6 +28,7 @@ export default function Board() {
   const [toast, setToast] = useState(null);
   const [showMinijuego, setShowMinijuego] = useState(false);
   const [minijuegoPayload, setMinijuegoPayload] = useState(null);
+  const [showEndModal, setShowEndModal] = useState(false);
   const API_URL = "http://localhost:3000";
   const token = localStorage.getItem("token");
 
@@ -75,6 +77,8 @@ export default function Board() {
 
       setJugadores(jugadoresConUsuario);
       setPartida(dataPar);
+      // Mostrar modal si la partida está finalizada
+      setShowEndModal(dataPar?.estado === 'finalizada');
       setNombreTurno(nombreTurnoCalc);
 
       return { jugadores: jugadoresConUsuario, partida: dataPar, nombreTurno: nombreTurnoCalc };
@@ -363,6 +367,17 @@ export default function Board() {
       {toast && (
         <div className={`app-toast`}>{toast}</div>
       )}
+      {/* Modal de fin de partida */}
+      <EndGameModal
+        isOpen={showEndModal && Boolean(partida?.ganador_jugador_id)}
+        isWinner={miJugador && partida?.ganador_jugador_id === miJugador.id}
+        winnerName={nombreDeJugador(partida?.ganador_jugador_id, jugadores)}
+        onExit={() => {
+          try { leavePartida(partidaId); } catch (e) { /* ignore */ }
+          navigate('/lobby');
+        }}
+        onStay={() => setShowEndModal(false)}
+      />
       <div className="board-actions">
         <span className="badge">Partida #{partidaId}</span>
         {partida?.codigo_acceso && <span className="badge">Código: {partida.codigo_acceso}</span>}
