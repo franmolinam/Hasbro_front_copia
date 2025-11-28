@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+// Cargar imágenes disponibles (misma estrategia que en Board.jsx)
+const IMAGES = import.meta.glob('../imagenes/**', { eager: true, query: '?url', import: 'default' });
 import './MinijuegoBase.css';
 
 // Props:
@@ -16,6 +18,9 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
   const [indicePedido, setIndicePedido] = useState(0);
   const [mensajeTemporal, setMensajeTemporal] = useState(null);
   const [penalty, setPenalty] = useState(null);
+  const [paused, setPaused] = useState(false);
+  const [showCompletedImage, setShowCompletedImage] = useState(false);
+  const [completedImageSrc, setCompletedImageSrc] = useState(null);
 
   useEffect(() => {
     if (segundos <= 0) {
@@ -23,20 +28,37 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
       return;
     }
     if (completado) return;
+    if (paused) return;
     const t = setTimeout(() => setSegundos((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [segundos, completado]);
+  }, [segundos, completado, paused]);
 
-  function handleDragStart(e, key) {
-    e.dataTransfer.setData('text/plain', key);
+  function handleDragStart(e, key, options = {}) {
+    // options: { from: 'list'|'selected', idx }
+    const payload = { key, from: options.from || 'list', idx: options.idx ?? null };
+    try {
+      e.dataTransfer.setData('application/json', JSON.stringify(payload));
+    } catch (err) {
+      e.dataTransfer.setData('text/plain', key);
+    }
+    // allow move operation
+    e.dataTransfer.effectAllowed = 'move';
   }
 
   function handleDrop(e) {
     e.preventDefault();
     if (completado) return;
-    const key = e.dataTransfer.getData('text/plain');
-    if (!key) return;
-    setSelected((prev) => [...prev, key]);
+    let dataStr = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+    if (!dataStr) return;
+    let data;
+    try { data = JSON.parse(dataStr); } catch (err) { data = { key: dataStr, from: 'list' }; }
+    // If dragged from ingredient list, add to selected
+    if (!data) return;
+    if (data.from === 'list') {
+      setSelected((prev) => [...prev, data.key]);
+      return;
+    }
+    // if dragged from selected back into table, ignore (no-op) or reorder could be implemented
   }
 
   function handleDragOver(e) {
@@ -49,17 +71,58 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
     const req = currentPedido?.ingredientes || [];
     const ok = req.length === selected.length && req.every(r => selected.includes(r));
     if (ok) {
-      // si hay más pedidos, pasar al siguiente
-      if (pedidos && indicePedido < pedidos.length - 1) {
-        setIndicePedido((i) => i + 1);
-        setSelected([]);
-        setMensajeTemporal('Pedido OK — siguiente');
-        setTimeout(() => setMensajeTemporal(null), 1500);
-      } else {
-        setCompletado(true);
-        finish('gano');
+      // Mostrar imagen del pedido terminado y pausar el temporizador
+      let src = currentPedido?.img || null;
+      // Si no vino resuelta desde el padre, intentar buscar en IMAGES por patrón pedido_N en la carpeta del país
+      if (!src) {
+        const imageIndex = (pedidos && pedidos.length > 0) ? (indicePedido + 1) : 1;
+        const folder = getCountryFolder(pais?.nombre || '');
+        // buscar key que incluya la carpeta y el nombre pedido_{n}
+        for (const k of Object.keys(IMAGES)) {
+          if (!k.includes(`../imagenes/${folder}/`)) continue;
+          if (k.toLowerCase().includes(`pedido_${imageIndex}`)) {
+            src = IMAGES[k];
+            break;
+          }
+        }
+        // fallback: buscar cualquier pedido_{n} global
+        if (!src) {
+          for (const k of Object.keys(IMAGES)) {
+            if (k.toLowerCase().includes(`pedido_${imageIndex}`)) {
+              src = IMAGES[k];
+              break;
+            }
+          }
+        }
       }
-    } else {
+
+      const finalizar = () => {
+        if (pedidos && indicePedido < pedidos.length - 1) {
+          setIndicePedido((i) => i + 1);
+          setSelected([]);
+          setMensajeTemporal('Pedido OK — siguiente');
+          setTimeout(() => setMensajeTemporal(null), 1500);
+        } else {
+          setCompletado(true);
+          finish('gano');
+        }
+      };
+
+      if (src) {
+        setCompletedImageSrc(src);
+        setShowCompletedImage(true);
+        setPaused(true);
+        setTimeout(() => {
+          setShowCompletedImage(false);
+          setCompletedImageSrc(null);
+          setPaused(false);
+          finalizar();
+        }, 2000);
+      } else {
+        // si no hay imagen, comportarse como antes
+        finalizar();
+      }
+      } else {
       // pedido malo: penalizar con -5s y mostrar mensaje
       setMensajeTemporal('Pedido malo');
       // mostrar indicador -5s
@@ -67,9 +130,19 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
       setTimeout(() => setPenalty(null), 1400);
       setSegundos((s) => Math.max(0, s - 5));
       setTimeout(() => setMensajeTemporal(null), 2000);
-      // opcional: limpiar selección parcial
-      setSelected((s) => s.slice(0, Math.max(0, s.length - 1)));
+      // limpiar toda la zona de preparación (volver al estado vacío)
+      setSelected([]);
     }
+  }
+
+  function getCountryFolder(nombre) {
+    if (!nombre) return 'usa';
+    const n = nombre.toLowerCase();
+    if (n.includes('italia')) return 'italia';
+    if (n.includes('mexico')) return 'mexico';
+    if (n.includes('japon') || n.includes('japón')) return 'japon';
+    if (n.includes('eeuu') || n.includes('estados') || n.includes('usa') || n.includes('unidos')) return 'usa';
+    return n.replace(/\s+/g, '');
   }
 
   function finish(res) {
@@ -78,8 +151,33 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
     if (onComplete) onComplete(res);
   }
 
+  // handler to remove selected pill when dropped anywhere outside the prep table
+  function handleGlobalDrop(e) {
+    e.preventDefault();
+    let dataStr = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+    if (!dataStr) return;
+    let data;
+    try { data = JSON.parse(dataStr); } catch (err) { data = { key: dataStr, from: 'list' }; }
+    // if dropped outside and came from selected, remove that occurrence
+    if (data && data.from === 'selected') {
+      const insideTabla = e.target && e.target.closest && e.target.closest('.tabla-cocina');
+      if (!insideTabla) {
+        setSelected((prev) => {
+          const copy = [...prev];
+          if (data.idx != null && copy[data.idx] === data.key) {
+            copy.splice(data.idx, 1);
+          } else {
+            const i = copy.indexOf(data.key);
+            if (i >= 0) copy.splice(i, 1);
+          }
+          return copy;
+        });
+      }
+    }
+  }
+
   return (
-    <div className="minijuego-overlay">
+    <div className="minijuego-overlay" onDragOver={(ev) => ev.preventDefault()} onDrop={handleGlobalDrop}>
       <div className="minijuego-card">
         <header className="minijuego-header">
           <h2>{pais?.nombre || 'Minijuego'}</h2>
@@ -122,17 +220,36 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
           </aside>
 
             <main className="minijuego-cocina">
-              <div className="ingredientes-list">
+              <div className="ingredientes-list" onDragOver={(ev) => ev.preventDefault()} onDrop={(ev) => {
+                // allow dropping a selected pill back to the ingredientes list container
+                ev.preventDefault();
+                let dataStr = ev.dataTransfer.getData('application/json') || ev.dataTransfer.getData('text/plain');
+                if (!dataStr) return;
+                let data;
+                try { data = JSON.parse(dataStr); } catch (err) { data = { key: dataStr, from: 'list' }; }
+                if (data && data.from === 'selected') {
+                  setSelected((prev) => {
+                    const copy = [...prev];
+                    if (data.idx != null && copy[data.idx] === data.key) {
+                      copy.splice(data.idx, 1);
+                    } else {
+                      const i = copy.indexOf(data.key);
+                      if (i >= 0) copy.splice(i, 1);
+                    }
+                    return copy;
+                  });
+                }
+              }}>
                 {ingredientesDisponibles.map((ingRaw) => {
                   // soportar tanto string como objeto { key, label, img }
                   const ing = typeof ingRaw === 'string' ? { key: ingRaw, label: String(ingRaw) } : ingRaw || {};
                   const isSelected = selected.includes(ing.key);
-                  return (
+                    return (
                     <div
                       key={ing.key}
                       className={`ingrediente-btn ${isSelected ? 'selected' : ''}`}
                       draggable
-                      onDragStart={(e) => handleDragStart(e, ing.key)}
+                      onDragStart={(e) => handleDragStart(e, ing.key, { from: 'list' })}
                       title={`Arrastra ${ing.label} a la mesa`}
                     >
                       {ing.img ? (
@@ -154,12 +271,22 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
                     const label = found ? (typeof found === 'string' ? found : found.label) : s;
                     const img = found && typeof found !== 'string' ? found.img : null;
                     return (
-                      <span key={`${s}-${idx}`} className="sel-pill">
+                      <span
+                        key={`${s}-${idx}`}
+                        className="sel-pill"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, s, { from: 'selected', idx })}
+                      >
                         {img ? <img src={img} alt={label} style={{ width: 28, height: 28, verticalAlign: 'middle', borderRadius: 6 }} /> : label}
                       </span>
                     );
                   })}
                 </div>
+                {showCompletedImage && (
+                  <div className="completed-image-wrap">
+                    <img className="completed-image" src={completedImageSrc} alt="Pedido completado" />
+                  </div>
+                )}
               </div>
             </main>
         </div>

@@ -26,6 +26,18 @@ function normalizeKey(s) {
   return res;
 }
 
+// Mapear nombre de país (texto desde DB) a carpeta dentro de src/imagenes
+function countryFolderFromName(nombre) {
+  if (!nombre) return 'usa';
+  const n = String(nombre).toLowerCase();
+  if (n.includes('ital')) return 'italia';
+  if (n.includes('mex')) return 'mexico';
+  if (n.includes('japon') || n.includes('japón')) return 'japon';
+  if (n.includes('eeuu') || n.includes('estados') || n.includes('unidos') || n.includes('usa')) return 'usa';
+  // fallback: intentar normalizar y usar como carpeta
+  return n.replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+}
+
 // Buscar imagen coincidente para un ingrediente dentro de IMAGES
 function findImageForIngredient(paisNombre, ingredienteKey) {
   const candidate = normalizeKey(ingredienteKey);
@@ -470,9 +482,43 @@ export default function Board() {
                     }
 
                     // construir arreglo de pedidos (si existen) o fallback
+                    // determinar carpeta del país primero
+                    console.log('[pedidos] raw casilla.Pais =', casilla.Pais);
+                    console.log('[pedidos] raw country name =', casilla.Pais && casilla.Pais.nombre);
+                    // Lógica en cascada para inferir carpeta de país:
+                    // 1) usar casilla.Pais.nombre si está disponible
+                    // 2) else, inferir por el tipo de comida del minijuego (mj.tipo_comida)
+                    // 3) else, inferir por la casilla local del tablero (posición)
+                    function inferFolder() {
+                      if (casilla.Pais && casilla.Pais.nombre) {
+                        console.log('[pedidos] infer method=casilla.Pais');
+                        return countryFolderFromName(casilla.Pais.nombre);
+                      }
+                      if (mj && mj.tipo_comida) {
+                        const t = String(mj.tipo_comida).toLowerCase();
+                        if (t.includes('pizza') || t.includes('ital')) { console.log('[pedidos] infer method=mj.tipo_comida -> italia'); return 'italia'; }
+                        if (t.includes('taco') || t.includes('tacos') || t.includes('mex')) { console.log('[pedidos] infer method=mj.tipo_comida -> mexico'); return 'mexico'; }
+                        if (t.includes('sushi') || t.includes('japon') || t.includes('jap')) { console.log('[pedidos] infer method=mj.tipo_comida -> japon'); return 'japon'; }
+                        if (t.includes('hamburg') || t.includes('burger') || t.includes('usa') || t.includes('eeuu')) { console.log('[pedidos] infer method=mj.tipo_comida -> usa'); return 'usa'; }
+                      }
+                      // fallback: usar la casilla local definida en el frontend (casillas array)
+                      try {
+                        const posActual = miJugador?.posicion_actual;
+                        const localCas = casillas.find(c => Number(c.id) === Number(posActual));
+                        if (localCas) {
+                          if (localCas.img === imgItalia) { console.log('[pedidos] infer method=localCas -> italia'); return 'italia'; }
+                          if (localCas.img === imgMexico) { console.log('[pedidos] infer method=localCas -> mexico'); return 'mexico'; }
+                          if (localCas.img === imgJapon) { console.log('[pedidos] infer method=localCas -> japon'); return 'japon'; }
+                          if (localCas.img === imgEEUU) { console.log('[pedidos] infer method=localCas -> usa'); return 'usa'; }
+                        }
+                      } catch (e) { /* ignore */ }
+                      console.log('[pedidos] infer method=default -> usa');
+                      return 'usa';
+                    }
+                    const paisFolder = inferFolder();
                     let pedidosArr = [];
                     if (mj.Pedidos && mj.Pedidos.length > 0) {
-                      pedidosArr = mj.Pedidos.map((p) => {
+                      pedidosArr = mj.Pedidos.map((p, idx) => {
                         let ingredientesReq = [];
                         try {
                           ingredientesReq = JSON.parse(p.ingredientes_solicitados);
@@ -480,27 +526,63 @@ export default function Board() {
                         } catch {
                           ingredientesReq = String(p.ingredientes_solicitados || '').split(',').map(x => x.trim()).filter(Boolean);
                         }
-                        return { id: p.id, nombre: `${mj.tipo_comida} pedido`, ingredientes: ingredientesReq };
+                        // intentar adjuntar imagen del pedido (pedido_1.png, pedido_2.png, ...)
+                        let img = null;
+                        // buscar en IMAGES de forma robusta (igual que findImageForIngredient)
+                        for (const k of Object.keys(IMAGES)) {
+                          const parts = k.split('/');
+                          // esperable: ['..', 'imagenes', '<folder>', 'file.png']
+                          const folderSegment = parts[2] || '';
+                          if (folderSegment !== paisFolder) continue;
+                          const filename = parts[parts.length - 1] || '';
+                          const fnameNorm = normalizeKey(filename);
+                          if (fnameNorm.includes(`pedido${idx + 1}`) || fnameNorm.includes(`pedido_${idx + 1}`)) {
+                            img = IMAGES[k];
+                            console.debug('[pedidos] asignada imagen', paisFolder, `pedido_${idx+1}`, k);
+                            break;
+                          }
+                        }
+                        return { id: p.id, nombre: `${mj.tipo_comida} pedido`, ingredientes: ingredientesReq, img };
                       });
                     } else {
                       const picks = ingredientesDisponibles.slice(0, Math.min(3, ingredientesDisponibles.length));
-                      pedidosArr = [{ id: null, nombre: `${mj.tipo_comida} pedido`, ingredientes: picks }];
+                      let img = null;
+                      for (const k of Object.keys(IMAGES)) {
+                        const parts = k.split('/');
+                        const folderSegment = parts[2] || '';
+                        if (folderSegment !== paisFolder) continue;
+                        const filename = parts[parts.length - 1] || '';
+                        const fnameNorm = normalizeKey(filename);
+                        if (fnameNorm.includes('pedido1') || fnameNorm.includes('pedido_1')) {
+                          img = IMAGES[k];
+                          console.debug('[pedidos] asignada imagen fallback', paisFolder, 'pedido_1', k);
+                          break;
+                        }
+                      }
+                      pedidosArr = [{ id: null, nombre: `${mj.tipo_comida} pedido`, ingredientes: picks, img }];
                     }
+
+                    // LOG: información de depuración para verificar asignación de imágenes
+                    try {
+                      console.log('[pedidos] paisFolder=', paisFolder);
+                      const keysForFolder = Object.keys(IMAGES).filter(k => k.includes(`/imagenes/${paisFolder}/`));
+                      console.log('[pedidos] keys in IMAGES for folder (sample 20)=', keysForFolder.slice(0,20));
+                      console.log('[pedidos] pedidosArr=', pedidosArr.map(p=>({ nombre: p.nombre, img: p.img ? 'HAS_IMG' : null })) );
+                    } catch (e) { console.warn('Error logging pedidos debug info', e); }
 
                     // map ingredientesDisponibles a objetos con key/label/img usando el mapa de imports
                     const ingredientesMap = [];
-                    const paisNombre = (casilla.Pais && casilla.Pais.nombre) ? String(casilla.Pais.nombre).toLowerCase().replace(/\s+/g,'_') : null;
                     for (const k of ingredientesDisponibles) {
                       const key = k;
                       const label = String(k).replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
                       // buscar imagen más flexible (coincidencias parciales, sin acentos, sin guiones/espacios)
-                      const img = findImageForIngredient(paisNombre, k);
+                      const img = findImageForIngredient(paisFolder, k);
                       ingredientesMap.push({ key, label, color: '#ddd', img });
                     }
                     // log de depuración: ingredientes sin imagen encontrada
                     const faltantes = ingredientesMap.filter(i => !i.img).map(i => i.key);
                     if (faltantes.length > 0) {
-                      console.warn('No se encontraron imágenes para:', faltantes, 'en país:', paisNombre);
+                      console.warn('No se encontraron imágenes para:', faltantes, 'en país:', paisFolder);
                     }
 
                     const bonus = miJugador?.bonus_tiempo || 0;
