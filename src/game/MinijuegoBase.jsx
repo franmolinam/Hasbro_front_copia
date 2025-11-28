@@ -100,9 +100,16 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
                     <>
                       <div className="pedido-nombre">{currentPedido?.nombre || 'Plato'}</div>
                       <div className="pedido-ingredientes">
-                        {(currentPedido?.ingredientes || []).map((ing) => (
-                          <div key={ing} className="pedido-ing">{ing}</div>
-                        ))}
+                        {(currentPedido?.ingredientes || []).map((ing) => {
+                          const found = ingredientesDisponibles.find(i => (typeof i === 'string' ? i : i.key) === ing);
+                          const label = found ? (typeof found === 'string' ? found : found.label) : ing;
+                          const img = found && typeof found !== 'string' ? found.img : null;
+                          return (
+                            <div key={ing} className="pedido-ing">
+                              {img ? <img src={img} alt={label} style={{ width: 36, height: 36, borderRadius: 6 }} /> : label}
+                            </div>
+                          );
+                        })}
                       </div>
                     </>
                   );
@@ -116,24 +123,42 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
 
             <main className="minijuego-cocina">
               <div className="ingredientes-list">
-                {ingredientesDisponibles.map((ing) => (
-                  <div
-                    key={ing.key}
-                    className={`ingrediente-btn ${selected.includes(ing.key) ? 'selected' : ''}`}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, ing.key)}
-                    title={`Arrastra ${ing.label} a la mesa`}
-                  >
-                    <div className="ingrediente-icon" style={{background: ing.color || '#ddd'}}></div>
-                    <div className="ingrediente-label">{ing.label}</div>
-                  </div>
-                ))}
+                {ingredientesDisponibles.map((ingRaw) => {
+                  // soportar tanto string como objeto { key, label, img }
+                  const ing = typeof ingRaw === 'string' ? { key: ingRaw, label: String(ingRaw) } : ingRaw || {};
+                  const isSelected = selected.includes(ing.key);
+                  return (
+                    <div
+                      key={ing.key}
+                      className={`ingrediente-btn ${isSelected ? 'selected' : ''}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, ing.key)}
+                      title={`Arrastra ${ing.label} a la mesa`}
+                    >
+                      {ing.img ? (
+                        <img src={ing.img} alt={ing.label} className="ingrediente-icon" />
+                      ) : (
+                        <div className="ingrediente-icon" style={{background: ing.color || '#ddd'}} />
+                      )}
+                      <div className="ingrediente-label">{ing.label}</div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="tabla-cocina" onDrop={handleDrop} onDragOver={handleDragOver}>
                 <div className="tabla-center">Arrastra los ingredientes aquí</div>
                 <div className="tabla-selected">
-                  {selected.map((s, idx) => <span key={`${s}-${idx}`} className="sel-pill">{s}</span>)}
+                  {selected.map((s, idx) => {
+                    const found = ingredientesDisponibles.find(i => (typeof i === 'string' ? i : i.key) === s);
+                    const label = found ? (typeof found === 'string' ? found : found.label) : s;
+                    const img = found && typeof found !== 'string' ? found.img : null;
+                    return (
+                      <span key={`${s}-${idx}`} className="sel-pill">
+                        {img ? <img src={img} alt={label} style={{ width: 28, height: 28, verticalAlign: 'middle', borderRadius: 6 }} /> : label}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </main>

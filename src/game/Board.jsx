@@ -10,6 +10,48 @@ import imgFortuna from '../imagenes/Fortuna.png';
 import imgMexico from '../imagenes/bandera mexico.png';
 import imgJapon from '../imagenes/bandera japon.png';
 import { connect as connectSocket, registerUser, joinPartida, leavePartida, onPlayerJoined, offPlayerJoined, onGameUpdate, offGameUpdate, onPartidaStarted, offPartidaStarted, onPlayerMoved, offPlayerMoved, onGameFinished, offGameFinished } from '../api/socket';
+// Cargar todas las imágenes de `src/imagenes` (carpetas por país) como URLs para usarlas en minijuegos
+// Nota: `as: 'url'` está deprecado; usar `query: '?url'` y `import: 'default'` según Vite
+const IMAGES = import.meta.glob('../imagenes/**', { eager: true, query: '?url', import: 'default' });
+
+// Normalizar texto: minúsculas, quitar acentos, quitar separadores
+function normalizeKey(s) {
+  if (!s) return '';
+  const from = "ÁÀÄÂáàäâÉÈËÊéèëêÍÌÏÎíìïîÓÒÖÔóòöôÚÙÜÛúùüûÑñÇç";
+  const to   = "AAAAaaaaEEEEeeeeIIIIiiiiOOOOooooUUUUuuuuNnCc";
+  let res = String(s).trim().toLowerCase();
+  for (let i = 0; i < from.length; i++) res = res.replace(new RegExp(from[i], 'g'), to[i]);
+  res = res.replace(/[\s_\-]+/g, '');
+  res = res.replace(/[^a-z0-9]/g, '');
+  return res;
+}
+
+// Buscar imagen coincidente para un ingrediente dentro de IMAGES
+function findImageForIngredient(paisNombre, ingredienteKey) {
+  const candidate = normalizeKey(ingredienteKey);
+  // Primero buscar en la carpeta del país
+  if (paisNombre) {
+    for (const k of Object.keys(IMAGES)) {
+      if (!k.includes(`../imagenes/${paisNombre}/`)) continue;
+      const parts = k.split('/');
+      const filename = parts[parts.length - 1] || '';
+      const basename = filename.replace(/\.[^.]+$/, '');
+      if (normalizeKey(basename).includes(candidate) || candidate.includes(normalizeKey(basename))) {
+        return IMAGES[k];
+      }
+    }
+  }
+  // luego buscar en cualquier carpeta global
+  for (const k of Object.keys(IMAGES)) {
+    const parts = k.split('/');
+    const filename = parts[parts.length - 1] || '';
+    const basename = filename.replace(/\.[^.]+$/, '');
+    if (normalizeKey(basename).includes(candidate) || candidate.includes(normalizeKey(basename))) {
+      return IMAGES[k];
+    }
+  }
+  return null;
+}
 import EndGameModal from './EndGameModal';
 import MinijuegoBase from './MinijuegoBase.jsx';
 
@@ -445,8 +487,21 @@ export default function Board() {
                       pedidosArr = [{ id: null, nombre: `${mj.tipo_comida} pedido`, ingredientes: picks }];
                     }
 
-                    // map ingredientesDisponibles a objetos con key/label
-                    const ingredientesMap = ingredientesDisponibles.map((k) => ({ key: k, label: k.replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase()), color: '#ddd' }));
+                    // map ingredientesDisponibles a objetos con key/label/img usando el mapa de imports
+                    const ingredientesMap = [];
+                    const paisNombre = (casilla.Pais && casilla.Pais.nombre) ? String(casilla.Pais.nombre).toLowerCase().replace(/\s+/g,'_') : null;
+                    for (const k of ingredientesDisponibles) {
+                      const key = k;
+                      const label = String(k).replace(/_/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+                      // buscar imagen más flexible (coincidencias parciales, sin acentos, sin guiones/espacios)
+                      const img = findImageForIngredient(paisNombre, k);
+                      ingredientesMap.push({ key, label, color: '#ddd', img });
+                    }
+                    // log de depuración: ingredientes sin imagen encontrada
+                    const faltantes = ingredientesMap.filter(i => !i.img).map(i => i.key);
+                    if (faltantes.length > 0) {
+                      console.warn('No se encontraron imágenes para:', faltantes, 'en país:', paisNombre);
+                    }
 
                     const bonus = miJugador?.bonus_tiempo || 0;
                     const baseTime = mj.tiempo_limite_base || 30;
