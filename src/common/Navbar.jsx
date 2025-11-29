@@ -23,7 +23,7 @@ export default function Navbar() {
             return;
           }
         }
-      } catch (e) {
+      } catch {
         // token malformed: limpiar también
         localStorage.removeItem('token');
         localStorage.removeItem('socketId');

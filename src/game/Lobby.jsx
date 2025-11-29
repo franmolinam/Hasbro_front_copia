@@ -4,12 +4,12 @@ import SelectorAvatar from "../profile/SelectorAvatar.jsx";
 import { onPlayerJoined, offPlayerJoined, joinPartida, onGameUpdate, offGameUpdate } from '../api/socket';
 
 export default function Lobby() {
-  const [partidaId, setPartidaId] = useState(null);
+  const [, setPartidaId] = useState(null);
   const [codigo, setCodigo] = useState("");
   const [mostrarSelector, setMostrarSelector] = useState(false);
   const [accionPendiente, setAccionPendiente] = useState(null);
   const [misPartidasActivas, setMisPartidasActivas] = useState([]);
-  const [avatarSeleccionado, setAvatarSeleccionado] = useState(null);
+  const [, setAvatarSeleccionado] = useState(null);
   const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export default function Lobby() {
     if (!msg) return '';
     try {
       return msg.replace(/\s*Ahora es el turno del jugador con ID\s*\d+\.?/i, '').trim();
-    } catch (e) { return msg; }
+    } catch {  return msg; }
   }
 
   function avatarColor(val) {
@@ -78,7 +78,7 @@ export default function Lobby() {
                 partida
               });
 
-              try { joinPartida(partida.id); console.log('Uniéndose a sala WebSocket de partida:', partida.id); } catch(e) {}
+              try { joinPartida(partida.id); console.log('Uniéndose a sala WebSocket de partida:', partida.id); } catch(err) { console.error(err); }
             }
           }
         }
@@ -171,7 +171,7 @@ export default function Lobby() {
 
     onGameUpdate(handleGameUpdateLobby);
     return () => offGameUpdate(handleGameUpdateLobby);
-  }, [misPartidasActivas]);
+  }, [misPartidasActivas, fetchMisPartidasActivas]);
 
     const goToBoard = (id) => {
     setPartidaId(id);

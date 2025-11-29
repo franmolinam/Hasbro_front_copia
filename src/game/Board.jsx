@@ -21,7 +21,7 @@ function normalizeKey(s) {
   const to   = "AAAAaaaaEEEEeeeeIIIIiiiiOOOOooooUUUUuuuuNnCc";
   let res = String(s).trim().toLowerCase();
   for (let i = 0; i < from.length; i++) res = res.replace(new RegExp(from[i], 'g'), to[i]);
-  res = res.replace(/[\s_\-]+/g, '');
+  res = res.replace(/[\s_-]+/g, '');
   res = res.replace(/[^a-z0-9]/g, '');
   return res;
 }
@@ -164,11 +164,12 @@ export default function Board() {
           if (userId) {
             registerUser(userId, { token, socketId });
           }
-        } catch (e) {
+        } catch {
+          // ignore
         }
         joinPartida(partidaId);
-      } catch (e) {
-        console.warn('No se pudo establecer WS en Board:', e);
+      } catch (err) {
+        console.warn('No se pudo establecer WS en Board:', err);
       }
     }
 
@@ -183,10 +184,10 @@ export default function Board() {
               const nombre = payload.jugador?.nombre || payload?.jugador?.nombre || 'Un jugador';
               setToast(`${nombre} se ha unido a la partida`);
               setTimeout(() => setToast(null), 4000);
-            } catch (e) { /* ignore */ }
+            } catch (err) { console.error(err); }
         }
-      } catch (e) {
-        console.error('Error en handlePlayerJoined:', e);
+      } catch (err) {
+        console.error('Error en handlePlayerJoined:', err);
       }
     };
 
@@ -213,9 +214,9 @@ export default function Board() {
               setToast(texto);
               setTimeout(() => setToast(null), 7000);
             }
-          } catch (e) { /* ignore */ }
+          } catch (err) { console.error(err); }
         }
-      } catch (e) { console.error(e); }
+      } catch (err) { console.error(err); }
     };
 
     const handlePartidaStarted = async (payload) => {
@@ -227,7 +228,7 @@ export default function Board() {
           setToast('La partida ha comenzado');
           setTimeout(() => setToast(null), 3000);
         }
-      } catch (e) { console.error(e); }
+      } catch (err) { console.error(err); }
     };
 
     const handlePlayerMoved = async (payload) => {
@@ -237,7 +238,7 @@ export default function Board() {
         if (String(pid) === String(partidaId)) {
           await fetchDatos();
         }
-      } catch (e) { console.error(e); }
+      } catch (err) { console.error(err); }
     };
 
     onPlayerJoined(handlePlayerJoined);
@@ -252,7 +253,7 @@ export default function Board() {
         const nombre = ganador.nombre || 'Un jugador';
         setToast(`Fin de la partida. Ganó ${nombre}`);
         setTimeout(() => setToast(null), 6000);
-      } catch (e) { console.error(e); }
+      } catch (err) { console.error(err); }
     };
     onGameFinished(handleGameFinished);
     setupSocket();
@@ -265,7 +266,7 @@ export default function Board() {
       offPlayerMoved(handlePlayerMoved);
       offGameFinished(handlePlayerMoved);
       offGameFinished(handleGameFinished);
-      try { leavePartida(partidaId); } catch (e) { /* ignore */ }
+      try { leavePartida(partidaId); } catch (err) { console.error(err); }
     };
   }, [partidaId, fetchDatos]);
 
@@ -287,7 +288,7 @@ export default function Board() {
     if (!msg) return '';
     try {
       return msg.replace(/\s*Ahora es el turno del jugador con ID\s*\d+\.?/i, '').trim();
-    } catch (e) { return msg; }
+    } catch {  return msg; }
   }
 
   function avatarColor(val) {
@@ -427,7 +428,7 @@ export default function Board() {
         isWinner={miJugador && partida?.ganador_jugador_id === miJugador.id}
         winnerName={nombreDeJugador(partida?.ganador_jugador_id, jugadores)}
         onExit={() => {
-          try { leavePartida(partidaId); } catch (e) { /* ignore */ }
+          try { leavePartida(partidaId); } catch { /* ignore */ }
           navigate('/lobby');
         }}
         onStay={() => setShowEndModal(false)}
@@ -511,7 +512,7 @@ export default function Board() {
                           if (localCas.img === imgJapon) { console.log('[pedidos] infer method=localCas -> japon'); return 'japon'; }
                           if (localCas.img === imgEEUU) { console.log('[pedidos] infer method=localCas -> usa'); return 'usa'; }
                         }
-                      } catch (e) { /* ignore */ }
+                      } catch { /* ignore */ }
                       console.log('[pedidos] infer method=default -> usa');
                       return 'usa';
                     }
@@ -588,14 +589,17 @@ export default function Board() {
                     const bonus = miJugador?.bonus_tiempo || 0;
                     const baseTime = mj.tiempo_limite_base || 30;
                     const tiempoTotal = Math.max(5, baseTime + Number(bonus));
-                    setMinijuegoPayload({
+                    const payloadToShow = {
                       pais: casilla.Pais || { nombre: 'País' },
                       tiempo: tiempoTotal,
                       pedidos: pedidosArr,
                       ingredientesDisponibles: ingredientesMap,
                       minijuegoId: mj.id,
-                    });
-                    setShowMinijuego(true);
+                    };
+                    console.debug('[minijuego] preparando payload', payloadToShow);
+                    setMinijuegoPayload(payloadToShow);
+                    // asegurar que el payload se establezca antes de mostrar el modal
+                    setTimeout(() => setShowMinijuego(true), 0);
 
                   } catch (e) {
                     console.error('Error cargando minijuego real:', e);

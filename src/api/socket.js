@@ -1,12 +1,4 @@
-const WS_URL = (() => {
-  try {
-    // Para Render, siempre usar WSS (WebSocket Secure)
-    // Render requiere HTTPS/WSS, no acepta WS sin SSL
-    return 'wss://hasbro-back-252s2.onrender.com';
-  } catch {
-    return 'wss://hasbro-back-252s2.onrender.com';
-  }
-})();
+const WS_URL = 'wss://hasbro-back-252s2.onrender.com';
 let ws = null;
 
 let openPromise = null;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 // Cargar imágenes disponibles (misma estrategia que en Board.jsx)
 const IMAGES = import.meta.glob('../imagenes/**', { eager: true, query: '?url', import: 'default' });
 import './MinijuegoBase.css';
@@ -22,7 +22,14 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
   const [showCompletedImage, setShowCompletedImage] = useState(false);
   const [completedImageSrc, setCompletedImageSrc] = useState(null);
 
+  const finish = useCallback((res) => {
+    if (resultado) return; // already finished
+    setResultado(res);
+    if (onComplete) onComplete(res);
+  }, [resultado, onComplete]);
+
   useEffect(() => {
+    console.debug('[MinijuegoBase] mounted, tiempo=', tiempo, 'pedidos=', pedidos ? pedidos.length : (pedido ? 1 : 0));
     if (segundos <= 0) {
       finish('perdio');
       return;
@@ -31,27 +38,27 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
     if (paused) return;
     const t = setTimeout(() => setSegundos((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [segundos, completado, paused]);
+  }, [segundos, completado, paused, finish]);
 
-  function handleDragStart(e, key, options = {}) {
+  function handleDragStart(event, key, options = {}) {
     // options: { from: 'list'|'selected', idx }
     const payload = { key, from: options.from || 'list', idx: options.idx ?? null };
     try {
-      e.dataTransfer.setData('application/json', JSON.stringify(payload));
-    } catch (err) {
-      e.dataTransfer.setData('text/plain', key);
+      event.dataTransfer.setData('application/json', JSON.stringify(payload));
+    } catch {
+      event.dataTransfer.setData('text/plain', key);
     }
     // allow move operation
-    e.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.effectAllowed = 'move';
   }
 
-  function handleDrop(e) {
-    e.preventDefault();
+  function handleDrop(event) {
+    event.preventDefault();
     if (completado) return;
-    let dataStr = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+    let dataStr = event.dataTransfer.getData('application/json') || event.dataTransfer.getData('text/plain');
     if (!dataStr) return;
     let data;
-    try { data = JSON.parse(dataStr); } catch (err) { data = { key: dataStr, from: 'list' }; }
+    try { data = JSON.parse(dataStr); } catch {  data = { key: dataStr, from: 'list' }; }
     // If dragged from ingredient list, add to selected
     if (!data) return;
     if (data.from === 'list') {
@@ -61,8 +68,8 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
     // if dragged from selected back into table, ignore (no-op) or reorder could be implemented
   }
 
-  function handleDragOver(e) {
-    e.preventDefault();
+  function handleDragOver(event) {
+    event.preventDefault();
   }
 
   function intentarAgregarEnTabla() {
@@ -145,11 +152,7 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
     return n.replace(/\s+/g, '');
   }
 
-  function finish(res) {
-    if (resultado) return; // already finished
-    setResultado(res);
-    if (onComplete) onComplete(res);
-  }
+  
 
   // handler to remove selected pill when dropped anywhere outside the prep table
   function handleGlobalDrop(e) {
@@ -157,7 +160,7 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
     let dataStr = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
     if (!dataStr) return;
     let data;
-    try { data = JSON.parse(dataStr); } catch (err) { data = { key: dataStr, from: 'list' }; }
+    try { data = JSON.parse(dataStr); } catch {  data = { key: dataStr, from: 'list' }; }
     // if dropped outside and came from selected, remove that occurrence
     if (data && data.from === 'selected') {
       const insideTabla = e.target && e.target.closest && e.target.closest('.tabla-cocina');
@@ -181,6 +184,11 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
       <div className="minijuego-card">
         <header className="minijuego-header">
           <h2>{pais?.nombre || 'Minijuego'}</h2>
+          <div style={{ marginLeft: 8 }}>
+            {typeof onCancel === 'function' && (
+              <button onClick={() => { try { onCancel(); } catch {} }} style={{ background: 'transparent', border: 'none', fontSize: 16, cursor: 'pointer' }} aria-label="Cerrar">✕</button>
+            )}
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
             <div className="minijuego-timer">{String(segundos).padStart(2,'0')}s</div>
             {penalty && <div className="penalty">-{penalty}s</div>}
@@ -226,7 +234,7 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
                 let dataStr = ev.dataTransfer.getData('application/json') || ev.dataTransfer.getData('text/plain');
                 if (!dataStr) return;
                 let data;
-                try { data = JSON.parse(dataStr); } catch (err) { data = { key: dataStr, from: 'list' }; }
+                try { data = JSON.parse(dataStr); } catch {  data = { key: dataStr, from: 'list' }; }
                 if (data && data.from === 'selected') {
                   setSelected((prev) => {
                     const copy = [...prev];
