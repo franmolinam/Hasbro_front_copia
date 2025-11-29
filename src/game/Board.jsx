@@ -83,7 +83,7 @@ export default function Board() {
   const [showMinijuego, setShowMinijuego] = useState(false);
   const [minijuegoPayload, setMinijuegoPayload] = useState(null);
   const [showEndModal, setShowEndModal] = useState(false);
-  const API_URL = "http://localhost:3000";
+  const API_URL = "https://hasbro-back-252s2.onrender.com";
   const token = localStorage.getItem("token");
 
 
