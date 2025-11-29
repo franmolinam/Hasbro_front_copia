@@ -7,13 +7,15 @@
 
 Para acceder al proyecto apreta [este link](https://chefaround.netlify.app/).
 
-Para construir el entorno de desarrollo del frontend, es necesario correr yarn install en la terminal del repositorio del frontend. Con este comando se descarga e instala todas las librerías necesarias para que el frontend funcione: react, vite y el resto de las dependencias definidad en package.json.
+Para construir el entorno de desarrollo del frontend, es necesario correr yarn install en la terminal del repositorio del frontend. Con este comando se descarga e instala todas las librerías necesarias para que el frontend funcione: react, vite y el resto de las dependencias definidas en package.json.
 
-Para levantar la interfaz de la aplicación y conectarse a la API, es necesario correr yarn dev en la terminal del backend y luego, una vez que está corriendo el backend, en la terminal del frontend correr primero nvm use 20 (es necesaria esta versión de node) y luego yarn dev y se levantará la interfaz conectada al render de la base de datos. yarn dev arranca el servidor de desarrollo de Vite y compila el códgio de React para que los cambios se vean al instante.
+Además, así como en el backend es necesario crear el .env especificado en el ReadMe del backend, aquí es necesario crear un .env con la línea: VITE_API_URL=https://hasbro-back-252s2.onrender.com
+
+Para levantar la interfaz de la aplicación y conectarse a la API, es necesario correr yarn dev en la terminal del backend y luego, una vez que está corriendo el backend, en la terminal del frontend correr primero nvm use 20 (es necesaria esta versión de node) y luego yarn dev y se levantará la interfaz conectada al render de la base de datos. yarn dev arranca el servidor de desarrollo de Vite y compila el código de React para que los cambios se vean al instante.
 
 ## Descripción General del Juego
 "Chef Around the World" es un juego web multijugador donde 2 a 4 usuarios compiten por convertirse en el Mejor Chef del Mundo. 
-Cada partida comienza en un tablero de 6 casillas que rerpesenta una ruta culinaria internacional. En cada país, los jugadores deben completar minijuegos de cocina, preparando platos típicos arrastrando los ingredientes correctos antes de que se acabe el tiempo. Además, a medida que se avanza en el tablero se va enfrentando una mayor dificultad en los minijuegos.
+Cada partida comienza en un tablero de 6 casillas que representa una ruta culinaria internacional. En cada país, los jugadores deben completar minijuegos de cocina, preparando platos típicos arrastrando los ingredientes correctos antes de que se acabe el tiempo. Además, a medida que se avanza en el tablero se va enfrentando una mayor dificultad en los minijuegos.
 El primer jugador en completar toda la ruta gastronómica y superar con éxito el minijuego final gana la partida.
 
 ## Estructura del Proyecto
@@ -23,17 +25,14 @@ El primer jugador en completar toda la ruta gastronómica y superar con éxito e
 ## Reglas del Juego
 - Turnos: Los jugadores avanzan por turnos definidos aleatoriamente al inicio de la partida.
 - Movimiento en el tablero: En la primera jugada, un jugador avanza automáticamente a la casilla 1. Luego, cada jugador avanza al completar su minijuego correspondiente.
-- Minijuegos por país: Cada casilla del tablero representa un país. En su turno, el jugador debe completar una cantidad de pedidos correspondientes a la comida típica de ese país,utilizando ingredientes correctos arrastrados con el mouse. Si se acaba el tiempo o se equivoca, deberá volver a intentarlo.
-- Casilla de fortuna: Una de las casillas corresponde a una fortuna. En esta se puede dar tiempo extra para el siguiente minijuego, quitar tiempo, hacer avanzar al jugador o retrocederlo en el tablero.
+- Minijuegos por país: Cada casilla del tablero representa un país. En su turno, el jugador debe completar una cantidad de pedidos correspondientes a la comida típica de ese país, utilizando los ingredientes correctos arrastrados con el mouse. Si se equivoca de ingredientes al entregar el pedido, se le descuentan 5 segundos de su tiempo y se le borra lo armado, teniendo que intentar armar de nuevo el pedido correctamente. Si se le acaba el tiempo sin haber completado correctamente la cantidad de pedidos coresspondientes al país, perderá el minijuego y se quedará en esa casilla.
+- Casilla de fortuna: Una de las casillas corresponde a una fortuna. En esta se puede quitar o dar tiempo extra para el siguiente minijuego, hacer avanzar al jugador o retrocederlo en el tablero.
 - Condiciones para ganar: El primer jugador en superar el minijuego del último país gana la partida.
-- Roles en la partida: El jugador que crea la partida es el anfitrión, y es el único que puede iniciarla. Los demás jugadores pueden unirse mediante código o de forma aleatoria.
+- Roles en la partida: El jugador que crea la partida es el anfitrión, y es el único que puede iniciarla. Los demás jugadores pueden unirse mediante el código de la partida o de forma aleatoria.
 - Desconexiones: Si un jugador queda inactivo, se marca como tal y no puede seguir participando.
 
 ## Cambios Relevantes Respecto a Entregas Anteriores
-Se mejoró la funcionalidad de la API. Se desarrolló el frontend, generando una interfaz gráfica que permite mejorar la experiencia del usuario.
-- Componentes Principales: Página de inicio, log in, registro, instrucciones, nosotras, perfil del jugador, lobby de partidas del jugador y tablero de cada partida.
-- Organización del CSS.
-- Navegación y Barra Superior: Barra Navegación esta presente en todas las vistas y permite ir a todas las secciones principales: "home", Instrucciones, Nosotras y Login, Registro y botón Logout cuando corresponda. En el perfil de bienvenida del usuario tiene un botón para ir al lobby de partidas.
+Se implementaron los minijuegos y el fin de las partidas. En cada país al apretar "jugar minijuego" se despliega la vista del minijuego con los ingredientes y pedidos correspondientes a ese país. A la izquierda se ven los ingredientes del pedido que toca (abajo sale un texto con la cantidad de pedidos que debe completar y en cual se encuentra actualmente), al medio se ven los ingredientes disponibles y a la derecha un sector donde arrastrar los ingredientes para preparar el pedido. Luego de ubicar todos los ingredientes correspondientes se presiona el botón "Entregar" y si el pedido es correcto aparece una imágen del pedido armado, un mensaje de "Pedido Ok" y se pasa al siguiente pedido. Si es el último se sale de la vista de minijuego ya que lo ganó y se acabo su turno. Si se equivoca aparece arriba en rojo, justo debajo del tiempo, un descuento de 5 segundos y se borra los ingredientes arrastrados. Si se acaba el tiempo y no completó la cantidad de pedidos bien, se sale la vista, el jugador se mantiene en su casilla y se acaba su turno. Además, si al arrastrar los ingredientes se equivocó en alguno, se puede arrastrar hacia afuera del cuadrado y se elimina el ingrediente sin problemas. Una vez que algún jugador completa correctamente el minijuego final les aparece un mensaje a los jugadores con el resultado de la partida. Para el ganador es un mensaje de triunfo, para el resto uno de derrota.
 
 ### API del Backend
 - **Endpoints conectados e implementados**:
@@ -95,7 +94,55 @@ Se mejoró la funcionalidad de la API. Se desarrolló el frontend, generando una
     Otros códigos que puede retornar el servidor son de errores, por ejemplo 400 Bad Request cuando el jugador o la partida no fue encontrada, si la partida no esta activa, o no es el turno de este jugador, la casilla actual no fue encontrada o la accion no corresponde con la casilla actual. Nuvamente, todos estos errores solo son posibles de POSTMAN, ya que en el frontend no le pueden ocurrir al usuario.
     Este endpoint se integra en el frontend en Borad.jsx, en la función jugar(accion). El botón "jugar minijuego" llama a jugar("jugar_minijuego") y el botón "Tomar fortuna" llama a jugar("obtener_fortuna"). Luego de esto el frontend interpreta el resultado y muestra el toast "Ganaste el minijuego y avanzas una casilla. Ahora juega {otroJugador}" o "Perdiste el minijuego, no avanzas. Ahora juega {otroJugador}" o, en caso de estar en una fortuna, un toast posible es "El jugador retrocede 1 casillas. Ahora juega {otroJugador}". Si la partida terminó, muestra un toast indicando quien ganó.
 
+    - **Otros Endpoints conectados e implementados**:
+    - `POST /auth/login` — Autenticación (login). Usado en `src/api/auth.js`.
+    - `POST /auth/signup` — Registro de usuario. Usado en `src/api/auth.js`.
+    - `GET /jugadores?usuarioId={usuarioId}&inactivo=false&includePartida=true` — Obtener jugadores del usuario con partidas incluidas (lista de partidas activas del usuario). Usado en `src/game/Lobby.jsx` en `fetchMisPartidasActivas()`.
+    - `GET /partidas/:id` — Obtener detalles de una partida. Usado en `src/game/Lobby.jsx` y `src/game/Board.jsx` para mostrar estado y tablero.
+    - `POST /partidas` — Crear nueva partida. Usado en `src/game/Lobby.jsx` (`crearPartida`) — body esperado: `{ anfitrion_usuario_id, avatar_elegido }`.
+    - `POST /partidas/:codigo/unirse` — Unirse por código. Usado en `src/game/Lobby.jsx` (`unirsePorCodigo`) — body: `{ usuarioId, avatar_elegido }`.
+    - `POST /partidas/unirse-random` — Unirse a una partida aleatoria. Usado en `src/game/Lobby.jsx` (`unirseAleatoria`) — body: `{ usuarioId, avatar_elegido }`.
+    - `GET /jugadores?partidaId={partidaId}` — Obtener todos los jugadores de una partida. Usado en `src/game/Board.jsx` (carga inicial de jugadores en `fetchDatos`).
+    - `GET /usuarios/:id` — Obtener información de usuario (nombre, avatar). Usado en `src/game/Board.jsx` cuando se muestran iniciales/nombre de jugadores.
+    - `PATCH /partidas/:id/iniciar` — Iniciar una partida (acción del anfitrión). Usado en `src/game/Board.jsx` (botón "Iniciar partida").
+    - `PATCH /jugadores/:id` — Actualizar jugador (ej. avanzar desde inicio). Usado en `src/game/Board.jsx` en `moverDesdeInicio()` para avanzar al jugador de la casilla 0 a 1.
+    
+    - **Implementado en esta entrega para el desarrollo de los minijuegos**:
+    - `GET /casillas/por_partida/:partidaId/pos/:pos` — Obtener casilla por posición dentro de una partida. Usado en `src/game/Board.jsx` cuando se consultan casillas específicas por posición.
+    
+        Ejemplo de respuesta (200 OK):
+
+        ```json
+        {
+            "id": 7,
+            "tipo": "minijuego",
+            "tableroId": 4,
+            "posicion_en_tablero": 2,
+            "minijuegoId": 3,
+            "paisId": 2,
+            "img": "/imagenes/italia/casilla_2.png"
+        }
+        ```
+    
+    - `GET /minijuegos/:id` — Obtener minijuego por id; devuelve el minijuego con su país asociado y los pedidos (ingredientes solicitados). Usado cuando se necesita cargar los datos del minijuego antes de iniciar la vista del minijuego.
+    
+                Ejemplo de respuesta (200 OK):
+
+                ```json
+                {
+                    "id": 3,
+                    "nombre": "Pizza Margherita",
+                    "pais": { "id": 2, "nombre": "Italia" },
+                    "pedidos": [
+                        { "id": 10, "nombre": "Pizza Margarita", "ingredientes": ["masa", "tomate", "queso"], "img": "/imagenes/italia/pedido_1.png" },
+                        { "id": 11, "nombre": "Pizza Prosciutto", "ingredientes": ["masa", "tomate", "queso", "jamon"], "img": "/imagenes/italia/pedido_2.png" }
+                    ]
+                }
+                ```
+
+
 - **Autenticación**: Se utiliza JWT para restringir el acceso a ciertas rutas según el tipo de usuario. Sólo usuarios registrados pueden entrar a vista bienvenida usuario, lobby de partidas y tablero de partidas. Rutas especificas en Readme de backend.
+
 - **Roles y Rutas Protegidas**: Los usuarios tienen roles de "jugador" y "administrador", con rutas protegidas para cada uno. Explicación de cada uno en "Guía de uso" y de JWT en readme del backend.
 
 ## Guía de uso
@@ -108,9 +155,4 @@ Se mejoró la funcionalidad de la API. Se desarrolló el frontend, generando una
 
 ### Uso de WebSockets
 Se encuentra documentada la implementación y eventos gestionados a través de WebSockets en el Readme del backend.
-
-## Qué falta por desarrollar
-- Funcionalidad de que el host pueda expulsar a un jugador de la partida.
-- Opción para jugadores de abandonar la partida y quedar inactivos.
-- Desarrollar el frontend de cada minijuego, el cual consiste en una  "cocina" donde cada jugador puede armar los pedidos, dependiendo del país, pero siempre con 6 ingredientes disponibles. Los mock up pueden verse en el [siguinte link](https://www.canva.com/design/DAG4g9GoOa4/wugT0koDO8aOaP3zfxkVwQ/edit?utm_content=DAG4g9GoOa4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton). Además se encuentran en pdf dentro de este mismo repositorio. 
 

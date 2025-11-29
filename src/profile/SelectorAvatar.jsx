@@ -12,8 +12,7 @@ export default function SelectorAvatar({ onSelect, onCancel }) {
         {colores.map((color) => (
           <div
             key={color}
-            className={`avatar-option ${seleccion === color ? "selected" : ""}`}
-            style={{ backgroundColor: color, width: 50, height: 50, borderRadius: "50%", cursor: "pointer" }}
+            className={`avatar-option ${seleccion === color ? "selected" : ""} color-${color}`}
             onClick={() => setSeleccion(color)}
           />
         ))}

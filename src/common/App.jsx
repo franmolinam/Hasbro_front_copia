@@ -13,7 +13,7 @@ export default function App() {
       />
 
       <h2>¡Bienvenido al juego!</h2>
-      <p style={{ color: "#333", fontSize: "1.1rem", marginBottom: "2rem" }}>
+      <p className="intro">
         Usa la barra de navegación superior para acceder a las diferentes secciones.
       </p>
     </div>

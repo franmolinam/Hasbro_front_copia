@@ -18,11 +18,15 @@
 .minijuego-header{display:flex;justify-content:space-between;align-items:center}
 .minijuego-timer{font-weight:700}
 .penalty{color: #ff3b3b;font-weight:800;margin-top:4px}
+.minijuego-header-close { margin-left: 8px; }
+.minijuego-header-close button { background: transparent; border: none; font-size: 16px; cursor: pointer; }
+.minijuego-header-right { display: flex; flex-direction: column; align-items: flex-end; }
 .minijuego-body{display:flex;gap:16px;margin-top:12px}
 .minijuego-pedido{width:220px}
 .pedido-card{background:#fdf2d6;padding:12px;border-radius:8px;border:2px solid #e0c97a}
 .pedido-ingredientes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .pedido-ing{background:#fff;padding:6px 8px;border-radius:6px;border:1px solid #ddd}
+.pedido-ing img{ width:36px; height:36px; border-radius:6px; }
 .minijuego-cocina{flex:1;display:flex;gap:12px}
 .ingredientes-list{display:flex;flex-direction:column;gap:8px;width:260px}
 .ingrediente-btn{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1px solid #ccc;background:#fafafa;cursor:pointer}
@@ -31,9 +35,12 @@
 .tabla-cocina{flex:1;border-radius:12px;background:#f06d5a;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:12px;cursor:pointer}
 .tabla-selected{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
 .sel-pill{background:rgba(255,255,255,0.2);padding:4px 8px;border-radius:999px}
+.sel-pill img{ width:28px; height:28px; vertical-align:middle; border-radius:6px; }
 .completed-image-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 .completed-image{max-width:60%;max-height:60%;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.35);background:#fff;padding:8px}
 .minijuego-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.minijuego-footer .mensaje-temporal{ font-weight: 700; }
+.minijuego-actions { display:flex; justify-content:flex-end; }
 .minijuego-actions button{padding:8px 12px;border-radius:8px}
 .resultado{font-weight:700;padding:6px 10px;border-radius:8px}
 .resultado.gano{background:#d4ffd9;color:#05620f}

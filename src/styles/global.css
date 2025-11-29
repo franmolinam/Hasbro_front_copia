@@ -44,9 +44,54 @@ input {
   margin: 1rem 0;
 }
 
+.avatar-option {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-block;
+}
+
 .avatar-option.selected {
   border: 3px solid #333;
   transform: scale(1.1);
+}
+
+/* color utility classes for avatar options and mini avatars */
+.color-blue { background-color: blue; }
+.color-red { background-color: red; }
+.color-green { background-color: green; }
+.color-yellow { background-color: yellow; }
+.color-purple { background-color: purple; }
+
+/* Lobby partida item */
+.partida-item {
+  border: 1px solid #ccc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.partida-item .avatar-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.partida-item .partida-controls {
+  margin-top: 8px;
+}
+
+/* Home intro paragraph */
+.home-hero .intro {
+  color: #333;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
 }
 
 .home-hero {

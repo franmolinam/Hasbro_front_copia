@@ -38,7 +38,7 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
     if (paused) return;
     const t = setTimeout(() => setSegundos((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [segundos, completado, paused, finish]);
+  }, [segundos, completado, paused, finish, pedido, pedidos, tiempo]);
 
   function handleDragStart(event, key, options = {}) {
     // options: { from: 'list'|'selected', idx }
@@ -184,12 +184,12 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
       <div className="minijuego-card">
         <header className="minijuego-header">
           <h2>{pais?.nombre || 'Minijuego'}</h2>
-          <div style={{ marginLeft: 8 }}>
+          <div className="minijuego-header-close">
             {typeof onCancel === 'function' && (
-              <button onClick={() => { try { onCancel(); } catch {} }} style={{ background: 'transparent', border: 'none', fontSize: 16, cursor: 'pointer' }} aria-label="Cerrar">✕</button>
+              <button onClick={() => { try { onCancel(); } catch (err) { console.warn('[MinijuegoBase] onCancel error', err); } }} aria-label="Cerrar">✕</button>
             )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <div className="minijuego-header-right">
             <div className="minijuego-timer">{String(segundos).padStart(2,'0')}s</div>
             {penalty && <div className="penalty">-{penalty}s</div>}
           </div>
@@ -210,11 +210,11 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
                           const found = ingredientesDisponibles.find(i => (typeof i === 'string' ? i : i.key) === ing);
                           const label = found ? (typeof found === 'string' ? found : found.label) : ing;
                           const img = found && typeof found !== 'string' ? found.img : null;
-                          return (
-                            <div key={ing} className="pedido-ing">
-                              {img ? <img src={img} alt={label} style={{ width: 36, height: 36, borderRadius: 6 }} /> : label}
-                            </div>
-                          );
+                              return (
+                                <div key={ing} className="pedido-ing">
+                                  {img ? <img src={img} alt={label} /> : label}
+                                </div>
+                              );
                         })}
                       </div>
                     </>
@@ -223,7 +223,7 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
               }
             </div>
             {pedidos && pedidos.length > 0 && (
-              <div style={{ marginTop: 8, fontSize: 12 }}>Pedido {indicePedido + 1} de {pedidos.length}</div>
+              <div className="pedido-index">Pedido {indicePedido + 1} de {pedidos.length}</div>
             )}
           </aside>
 
@@ -263,7 +263,7 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
                       {ing.img ? (
                         <img src={ing.img} alt={ing.label} className="ingrediente-icon" />
                       ) : (
-                        <div className="ingrediente-icon" style={{background: ing.color || '#ddd'}} />
+                        <div className={`ingrediente-icon ${['blue','red','green','yellow','purple'].includes((ing.color||'').toString().toLowerCase()) ? `color-${(ing.color||'').toString().toLowerCase()}` : ''}`} />
                       )}
                       <div className="ingrediente-label">{ing.label}</div>
                     </div>
@@ -285,7 +285,7 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
                         draggable
                         onDragStart={(e) => handleDragStart(e, s, { from: 'selected', idx })}
                       >
-                        {img ? <img src={img} alt={label} style={{ width: 28, height: 28, verticalAlign: 'middle', borderRadius: 6 }} /> : label}
+                        {img ? <img src={img} alt={label} /> : label}
                       </span>
                     );
                   })}
@@ -299,10 +299,10 @@ export default function MinijuegoBase({ pedidos = null, pedido = null, ingredien
             </main>
         </div>
         <footer className="minijuego-footer">
-          <div style={{ flex: 1 }}>
-            {mensajeTemporal && <div style={{ fontWeight: 700 }}>{mensajeTemporal}</div>}
+          <div className="mensaje-col">
+            {mensajeTemporal && <div className="mensaje-temporal">{mensajeTemporal}</div>}
           </div>
-          <div className="minijuego-actions" style={{ justifyContent: 'flex-end' }}>
+          <div className="minijuego-actions">
             <button onClick={() => intentarAgregarEnTabla()} className="btn-prepare">Entregar</button>
           </div>
           {resultado && (

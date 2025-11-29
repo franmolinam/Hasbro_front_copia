@@ -14,7 +14,7 @@ export default function Lobby() {
 
   const navigate = useNavigate();
 
-  const API_URL = "https://hasbro-back-252s2.onrender.com";
+  const API_URL = import.meta.env.VITE_API_URL || "https://hasbro-back-252s2.onrender.com";
   const token = localStorage.getItem("token");
 
   function sanitizeServerMessage(msg) {
@@ -24,10 +24,7 @@ export default function Lobby() {
     } catch {  return msg; }
   }
 
-  function avatarColor(val) {
-    if (!val || val === 'default') return 'blue';
-    return val;
-  }
+  // avatar colors are represented via CSS utility classes (e.g. color-blue)
 
   function getUserIdFromToken() {
     try {
@@ -329,7 +326,6 @@ export default function Lobby() {
             <div
               key={partida.id}
               className="partida-item"
-              style={{ border: "1px solid #ccc", padding: 12, borderRadius: 8, marginBottom: 16 }}
             >
               <h4>
                 {partida.codigo_acceso ? (
@@ -341,8 +337,8 @@ export default function Lobby() {
               <p>
                 Estado: <b>{partida.estado}</b> · 
                 {jugador.es_anfitrion ? 'Eres anfitrión' : 'Jugador'} ·
-                Avatar: <span style={{display:'inline-flex', alignItems:'center', gap:8}}>
-                  <span style={{display:'inline-block', width:12, height:12, borderRadius:'50%', backgroundColor: avatarColor(jugador.avatar_elegido)}} />
+                Avatar: <span className="avatar-inline">
+                  <span className={`avatar-mini ${['blue','red','green','yellow','purple'].includes((jugador.avatar_elegido||'').toString().toLowerCase()) ? `color-${(jugador.avatar_elegido||'').toString().toLowerCase()}` : ''}`} />
                   <span>{(jugador.avatar_elegido && jugador.avatar_elegido !== 'default') ? jugador.avatar_elegido : 'default'}</span>
                 </span>
               </p>

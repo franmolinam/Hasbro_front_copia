@@ -291,10 +291,7 @@ export default function Board() {
     } catch {  return msg; }
   }
 
-  function avatarColor(val) {
-    if (!val || val === 'default') return 'blue';
-    return val;
-  }
+  // avatar colors are represented via CSS utility classes (e.g. color-blue)
 
   function accionDisponiblePara(jugador) {
     if (!partida || partida.estado !== "en_juego") return null;
@@ -696,8 +693,7 @@ export default function Board() {
                     return (
                       <div
                         key={jug.id}
-                        className="avatar-mini"
-                        style={{ backgroundColor: avatarColor(jug.avatar_elegido) }}
+                        className={`avatar-mini ${['blue','red','green','yellow','purple'].includes((jug.avatar_elegido||'').toString().toLowerCase()) ? `color-${(jug.avatar_elegido||'').toString().toLowerCase()}` : ''}`}
                         title={`${jug.Usuario?.nombre || "Jugador"} (id ${jug.id})`}
                       >
                         {inicial}
